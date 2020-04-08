@@ -59,8 +59,12 @@ export class Token{
         INTEGER: 'Entero',
         DECIMAL: 'Decimal',
         STRING: 'String',
+        NORMAL_STRING,
+        HTML_STRING
         ID: 'ID',
         COMMENT: 'Comment',
+        ONE_LINE_COMMENT,
+        MULTILINE_COMMENT
         UNKNOWN: 'Desconocido',
         LAST: 'Ultimo'
     };*/
