@@ -15,17 +15,21 @@ export class LexicalAnalyzer{
 
     scanText(_text:string): Array<Token> {
                 
+        console.log("Entro a escanear");
+
+        this.tokenList = new Array<Token>();
+
         _text += "#";
 
         this.state = 0;
         this.row = this.col = this.colF = 1;
+        this.txtAux = "";
 
         let char;
 
         for(let i=0; i  < _text.length; i++){
 
-            
-            char = _text[i];
+            char = _text[i];            
 
             switch(this.state){
                 case 0:
@@ -236,7 +240,7 @@ export class LexicalAnalyzer{
                     }
                     break;
                 case 6:
-                    if(char === "/n"){
+                    if(char === "\n"){
                         this.row++;
                         this.col = 1;
                         this.addToken("ONE_LINE_COMMENT");
@@ -248,6 +252,7 @@ export class LexicalAnalyzer{
                     break;
                 case 7:
                     if(char === "*"){
+                        this.txtAux += char;
                         this.state = 8;
                         this.col++;
                     }
@@ -257,7 +262,7 @@ export class LexicalAnalyzer{
                         this.col = 1;
                     }
                     else{
-                        this.txtAux == char;
+                        this.txtAux += char;
                         this.col++;
                     }
                     break;
@@ -282,7 +287,7 @@ export class LexicalAnalyzer{
                     }
                     else{
                         this.col++;
-                        if(char == "/n"){
+                        if(char == "\n"){
                             this.row++;
                             this.col = 1;
                         }
@@ -297,7 +302,7 @@ export class LexicalAnalyzer{
                     }
                     else{
                         this.col++;
-                        if(char == "/n"){
+                        if(char === "\n"){
                             this.row++;
                             this.col = 1;
                         }
@@ -376,22 +381,34 @@ export class LexicalAnalyzer{
             }
         }
 
+
+        /*
+        for(let token of this.tokenList){
+            console.log("TOKEN");
+            console.log("Tipo: " + token.type);
+            console.log("Lexema: \n" + token.lexeme);
+            console.log("\nFila: " + token.type);
+            console.log("Columna: " + token.lexeme);
+            console.log("\n\n");
+        }*/
+
         return this.tokenList;
     }
 
     addToken(_tokenType: string){
+        console.log("Agregando " + _tokenType);
         this.tokenList.push(new Token(_tokenType, this.txtAux, this.row.toString(), this.col.toString()));
         this.txtAux = "";
         this.state = 0;
     }
 
-    IsDigit(_char: string):boolean{
-        return _char.match(/[0-9]/i) === null;
+    IsDigit(_char: string){
+        return _char.length === 1 && _char.match(/[0-9]/i);
     }
 
-    IsLetter(_char: string):boolean{
+    IsLetter(_char: string){
         _char = _char.toLowerCase();
-        return _char.match(/[a-z]/i) === null;
+        return _char.length === 1 && _char.match(/[a-z]/i);
     }
 
     GenerateErrorsReport(){
@@ -403,7 +420,7 @@ export class LexicalAnalyzer{
     }
 
     GenerateJSONFile(){
-        
+
     }
 
 }
