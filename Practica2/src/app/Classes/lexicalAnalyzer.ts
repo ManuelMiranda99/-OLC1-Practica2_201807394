@@ -1,4 +1,5 @@
 import { Token } from './Token'
+import { saveAs } from './FileSaver.js'
 
 export class LexicalAnalyzer{
 
@@ -272,6 +273,10 @@ export class LexicalAnalyzer{
                         this.col++;
                         this.addToken("MULTILINE_COMMENT");
                     }
+                    else if(char === "*"){
+                        this.txtAux += char;
+                        this.col++;
+                    }
                     else{
                         this.txtAux += char;
                         this.col++;
@@ -411,8 +416,41 @@ export class LexicalAnalyzer{
         return _char.length === 1 && _char.match(/[a-z]/i);
     }
 
-    GenerateErrorsReport(){
+    GenerateErrorsReport(_tokenList: Array<Token>){
 
+        let table = "<table>\n"+
+                    "\t<tr>\n" +
+                    "\t\t<td>No.</td>\n" + 
+                    "\t\t<td>Tipo de error</td>\n" + 
+                    "\t\t<td>Linea</td>\n" + 
+                    "\t\t<td>Columna</td>\n" + 
+                    "\t\t<td>Descripcion</td>\n" +
+                    "\t</tr>";
+        let x = 1;
+        for(let token of _tokenList){
+            if(token.type === "UNKNOWN"){
+                table += 
+                "\t<tr>\n" +
+                "\t\t<td>" + x + "</td>\n" + 
+                "\t\t<td>Léxico</td>\n" + 
+                "\t\t<td>" + token.row + "</td>\n" + 
+                "\t\t<td>" + token.column + "</td>\n" + 
+                "\t\t<td>El carácter '" + token.lexeme + "' no pertenece al lenguaje</td>\n" +
+                "\t</tr>\n";
+                x++;
+            }
+        }
+        table += "</table>";
+
+        let html =  "<html>\n " + 
+                    "\t<head>\n" +  
+                    "\t\t<title>Reporte de Errores</title>\n" +
+                    "\t</header>\n\n" +
+                    "<body>\n" + table +
+                    "\n</body>\n" + 
+                    "</html>";
+        var htmlFile = new Blob([html], {type: "text/plain; charset=utf-8"});
+        saveAs(htmlFile, "errores.html");
     }
 
     GenerateHTMLFile(){

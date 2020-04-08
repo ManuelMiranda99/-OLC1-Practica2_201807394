@@ -29,6 +29,17 @@ export class MainComponent implements OnInit {
 
     this.tokenList = this.analyzer.scanText(text);
 
+    let flag = false;
+    for(let token of this.tokenList){
+      if(token.type === "UNKNOWN"){
+        flag = true;
+        break;
+      }
+    }
+    if(flag){
+      this.analyzer.GenerateErrorsReport(this.tokenList);
+    }
+
   }
 
   addTab(){
