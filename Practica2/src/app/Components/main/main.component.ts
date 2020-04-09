@@ -36,10 +36,6 @@ export class MainComponent implements OnInit {
         break;
       }
     }
-    if(flag){
-      this.analyzer.GenerateErrorsReport(this.tokenList);
-    }
-
   }
 
   addTab(){
