@@ -1,0 +1,155 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  
+    <a class="navbar-brand text-white">Traductor C# a Python</a>
+
+    <ul class="nav justify-content-end">
+
+        <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Archivo</a>      
+
+        <div class="dropdown-menu">
+            <a href="#" (click)="addTab()" class="dropdown-item">Crear Nuevo</a>
+            <a href="#" class="dropdown-item">Abrir Documento</a>
+            <a href="#" class="dropdown-item">Guardar</a>
+            <a href="#" class="dropdown-item">Guardar Como</a>
+        </div>
+
+        </li>
+
+        <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Reportes</a>
+
+        <div class="dropdown-menu">
+            <a href="#" class="dropdown-item">Python</a>
+            <a href="#" class="dropdown-item">HTML</a>        
+        </div>
+        </li>
+
+    </ul>
+
+</nav>
+
+
+<br>
+
+<!--
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+  </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+  <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">...</div>  
+</div>
+
+-->
+<ul class="nav nav-tabs" id="myTabs" role="tablist">
+    <li *ngFor="let tab of tabs" class="nav-item">
+        <a class="nav-link" id="{{tab.id}}-tab" data-toggle="tab" href="#{{tab.id}}" role="tab" attr.aria-controls="{{tab.id}}">{{tab.name}}</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="myTabContent">
+    <div *ngFor="let tab of tabs" class="tab-pane fade show" id="{{tab.id}}" role="tabpanel" attr.aria-labelledby="{{tab.id}}-tab">
+
+        <div class="container-fluid">
+            <!--Text and Python-->
+            <div class="row">
+                <!--C#-->
+                <div class="col col-7">
+                    <div class="card text-center text-white bg-dark">
+                        <div class="card-header font-weight-bold">
+                            C#
+                        </div>
+        
+                        <div class="card-body">
+                            <form #CSharp="ngForm" (ngSubmit)="analizeText(CSharp)">
+                                <div class="form-group">                                    
+                                    <textarea [(ngModel)]="tab.text" name="text" id="text" cols="100" rows="20" class="form-control"></textarea>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-warning" style="width: 100%;">
+                                            Analizar Texto
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+        
+                <!--Python-->
+                <div class="col col-5">
+                    <div class="card text-center text-white bg-dark">
+                        <div class="card-header font-weight-bold">
+                            Python
+                        </div>
+        
+                        <div class="card-body">
+                            <form>
+                                <div class="form-group">
+                                    <textarea name="PythonText" id="PythonText" cols="100" rows="20" class="form-control" readonly></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <br>
+            <!--Consoles-->
+            <div class="row">
+                <!--Symbols Table-->
+                <div class="col">
+                    <div class="card text-center text-white bg-dark">
+                        <div class="card-header font-weight-bold">
+                            Tabla de Símbolos
+                        </div>
+        
+                        <div class="card-body">
+                            <table>
+        
+                            </table>
+                        </div>
+                    </div>
+                </div>        
+                <!--HTML Report-->
+                <div class="col">
+                    <div class="card text-center text-white bg-dark">
+                        <div class="card-header font-weight-bold">
+                            HTML
+                        </div>
+        
+                        <div class="card-body">
+                            <form>
+                                <div class="form-group">
+                                    <textarea name="HTMLText" id="HTMLText" cols="100" rows="10" class="form-control" readonly></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+        
+                <!--JSON Report-->
+                <div class="col">
+                    <div class="card text-center text-white bg-dark">
+                        <div class="card-header font-weight-bold">
+                            JSON
+                        </div>
+        
+                        <div class="card-body">
+                            <form>
+                                <div class="form-group">
+                                    <textarea name="JSONText" id="JSONText" cols="100" rows="10" class="form-control" readonly></textarea>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
