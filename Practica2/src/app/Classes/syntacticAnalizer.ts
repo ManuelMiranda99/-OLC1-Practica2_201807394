@@ -10,10 +10,30 @@ export class SyntacticAnalyzer{
     preanalisis: Token;
     sintacticError: boolean = false;
     errorF: boolean = false;
+    // Flags
+    flagFunction: boolean = false;
+    flagMethod: boolean = false;
+
     traductor: ToPython = new ToPython();
 
     constructor(){
         
+    }
+
+    PassComments(){
+        while(this.preanalisis.type === "ONE_LINE_COMMENT" || this.preanalisis.type === "MULTILINE_COMMENT"){
+            this.index++;
+            this.preanalisis = this.tokenList[this.index];
+        }
+    }
+
+    AddFunctionOrMethod(){
+        if(this.flagFunction){
+            this.SentencesListFunction();
+        }
+        else if(this.flagMethod){
+            this.SentencesListMethod();
+        }
     }
 
     Parea(_tokenType: string){
@@ -70,54 +90,141 @@ export class SyntacticAnalyzer{
 
         this.preanalisis = this.tokenList[this.index];
 
+        this.PassComments();
+
         this.tabs = -1;
+
         this.Parea("WR_CLASS");
         this.Parea("ID");
         this.Parea("S_OPEN_KEY");
         
-        this.FunctionList();
-
-        this.Parea("WR_VOID");
-        this.Parea("WR_MAIN");
-        this.Parea("S_OPEN_PARENTHESIS");
-        this.Parea("S_CLOSE_PARENTHESIS");
-        this.Parea("S_OPEN_KEY");
-        this.SentencesList();
-        this.Parea("S_CLOSE_KEY");
-        
-        this.FunctionList();
+        this.InsideClass();
 
         this.Parea("S_CLOSE_KEY");
 
         return this.errorsList;
     }
 
-    FunctionList(){
+    InsideClass(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "WR_VOID"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.Type();
-
             this.Parea("ID");
+            this.FunctionOrNot();
+            this.InsideClass();
+        }
+        else if(this.preanalisis.type === "WR_VOID"){
+            this.Parea("WR_VOID");
+            this.MainOrNot();
+            this.InsideClass();
+        }
+        else{
+            // Epsilon
+        }
+    }
 
+    FunctionOrNot(){
+        if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
             this.Parea("S_OPEN_PARENTHESIS");
             this.Parameter();
             this.Parea("S_CLOSE_PARENTHESIS");
             this.Parea("S_OPEN_KEY");
-            this.SentencesList();
-            this.ReturnOrNot();
-            this.Parea("S_CLOSE_KEY");
 
-            this.FunctionList();
+            this.flagFunction = true;
+
+            this.SentencesList();
+            this.SentencesListFunction();
+
+            this.flagFunction = false;
+
+            this.Parea("S_CLOSE_KEY");            
+        }
+        else{
+            this.IDList();
+            this.OptAssignment();
+            this.Parea("S_SEMICOLON");            
+        }
+    }
+
+    SentencesListFunction(){
+        if(this.preanalisis.type === "WR_RETURN"){
+            this.ReturnFunction();
+            this.SentencesList();
+            this.SentencesListFunction();
         }
         else{
             // Epsilon
-        }        
+        }
     }
 
-    ReturnOrNot(){
+    ReturnFunction(){
+        this.Parea("WR_RETURN");
+        this.Expression();
+        this.Parea("S_SEMICOLON");
+    }
+
+    MainOrNot(){
+        if(this.preanalisis.type === "WR_MAIN"){
+            this.Parea("WR_MAIN");
+            this.Parea("S_OPEN_PARENTHESIS");
+            this.Parea("S_CLOSE_PARENTHESIS");
+            this.Parea("S_OPEN_KEY");
+            
+            this.SentencesList();
+
+            this.Parea("S_CLOSE_KEY");
+        }
+        else{
+            this.Parea("ID");
+            this.Parea("S_OPEN_PARENTHESIS");
+            this.Parameter();
+            this.Parea("S_CLOSE_PARENTHESIS");
+            this.Parea("S_OPEN_KEY");
+
+            this.flagMethod = true;
+
+            this.SentencesList();
+            this.SentencesListMethod();
+
+            this.flagMethod = false;
+
+            this.Parea("S_CLOSE_KEY");
+        }
+    }
+
+    SentencesListMethod(){
         if(this.preanalisis.type === "WR_RETURN"){
-            this.Parea("WR_RETURN");
-            this.Expression();
+            this.ReturnMethod();
+            this.SentencesList();
+            this.SentencesListMethod();
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    ReturnMethod(){
+        this.Parea("WR_RETURN");
+        this.Parea("S_SEMICOLON");
+    }
+
+    SentencesListLoops(){
+        if(this.preanalisis.type === "WR_BREAK"){
+            this.Parea("WR_BREAK");
+            this.Parea("S_SEMICOLON");
+        }
+        else if(this.preanalisis.type === "WR_CONTINUE"){
+            this.Parea("WR_CONTINUE");
+            this.Parea("S_SEMICOLON");
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    SentencesListSwitch(){
+        if(this.preanalisis.type === "WR_BREAK"){
+            this.Parea("WR_BREAK");
             this.Parea("S_SEMICOLON");
         }
         else{
@@ -141,14 +248,14 @@ export class SyntacticAnalyzer{
         else if(this.preanalisis.type === "WR_BOOL"){
             this.Parea("WR_BOOL");
         }
-        else if(this.preanalisis.type === "WR_VOID"){
-            this.Parea("WR_VOID");
+        else{
+            // Error
         }
     }
 
     Parameter(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "WR_VOID"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.ParameterDeclaration();
         }
         else{
@@ -174,7 +281,7 @@ export class SyntacticAnalyzer{
 
     SentencesList(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "WR_VOID"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.DeclarationSentence();
             this.SentencesList();
         }
@@ -335,8 +442,9 @@ export class SyntacticAnalyzer{
 
             this.SentencesList();
 
-            this.Parea("WR_BREAK");
-            this.Parea("S_SEMICOLON");
+            this.AddFunctionOrMethod();
+
+            this.SentencesListSwitch();            
 
             this.CaseList();
         }
@@ -352,8 +460,10 @@ export class SyntacticAnalyzer{
             
             this.SentencesList();
 
-            this.Parea("WR_BREAK");
-            this.Parea("S_SEMICOLON");            
+            this.AddFunctionOrMethod();
+
+            this.SentencesListSwitch();
+
         }
         else{
             // Epsilon
@@ -374,12 +484,16 @@ export class SyntacticAnalyzer{
 
         this.SentencesList();
 
+        this.AddFunctionOrMethod();
+
+        this.SentencesListLoops();
+
         this.Parea("S_CLOSE_KEY");
     }
 
     OptType(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "WR_VOID"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.Type();
         }
         else{
@@ -415,6 +529,10 @@ export class SyntacticAnalyzer{
 
         this.SentencesList();
 
+        this.AddFunctionOrMethod();
+
+        this.SentencesListLoops();
+
         this.Parea("S_CLOSE_KEY");
     }
 
@@ -423,6 +541,10 @@ export class SyntacticAnalyzer{
         this.Parea("S_OPEN_KEY");
 
         this.SentencesList();
+
+        this.AddFunctionOrMethod();
+
+        this.SentencesListLoops();
 
         this.Parea("S_CLOSE_KEY");
         this.Parea("WR_WHILE");
