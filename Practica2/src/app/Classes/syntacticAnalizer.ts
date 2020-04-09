@@ -33,6 +33,20 @@ export class SyntacticAnalyzer{
                 this.errorF = true;
             }
             if(this.preanalisis.type != "ULTIMO"){
+                if(this.preanalisis.type === "ONE_LINE_COMMENT" || this.preanalisis.type === "MULTILINE_COMMENT"){
+                    do{
+                        // traductor.TraduceComment();
+                        this.index++;
+                        this.preanalisis = this.tokenList[this.index];
+                    }while(this.preanalisis.type == "ONE_LINE_COMMENT" || this.preanalisis.type == "MULTILINE_COMMENT");
+                }
+                if(this.preanalisis.type != _tokenType){
+                    // Sintactic Error
+                    console.log("Error sintactico");
+                    this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]");
+                    this.sintacticError = true;
+                    this.errorF = true;
+                }
                 this.index++;
                 this.preanalisis = this.tokenList[this.index];
                 do{
@@ -51,6 +65,8 @@ export class SyntacticAnalyzer{
 
         this.index = 0;
         this.tokenList = _tokenList;
+
+        this.tokenList.push(new Token("ULTIMO", "ULTIMO", "GG", "GG"));
 
         this.preanalisis = this.tokenList[this.index];
 

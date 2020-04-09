@@ -4,6 +4,7 @@ import { LexicalAnalyzer } from 'src/app/Classes/lexicalAnalyzer';
 import { Tab } from 'src/app/Classes/Tab';
 import { NgForm } from '@angular/forms';
 import { FormsModule } from '@angular/forms'
+import { SyntacticAnalyzer } from 'src/app/Classes/syntacticAnalizer';
 
 @Component({
   selector: 'app-main',
@@ -14,6 +15,8 @@ export class MainComponent implements OnInit {
 
   tokenList = new Array<Token>();
   analyzer = new LexicalAnalyzer();
+  parser = new SyntacticAnalyzer();
+  sintacticErrors = new Array<string>();
   countOfTabs = 0;
 
   tabs = new Array<Tab>();
@@ -36,6 +39,9 @@ export class MainComponent implements OnInit {
         break;
       }
     }
+
+    this.sintacticErrors = this.parser.Start(this.tokenList);
+
   }
 
   addTab(){

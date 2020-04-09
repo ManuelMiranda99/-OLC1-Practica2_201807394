@@ -401,7 +401,7 @@ export class LexicalAnalyzer{
     }
 
     addToken(_tokenType: string){
-        console.log("Agregando " + _tokenType);
+        //console.log("Agregando " + _tokenType);
         this.tokenList.push(new Token(_tokenType, this.txtAux, this.row.toString(), this.col.toString()));
         this.txtAux = "";
         this.state = 0;
