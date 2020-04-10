@@ -11,19 +11,22 @@ import { SyntacticAnalyzer } from 'src/app/Classes/syntacticAnalizer';
   templateUrl: './main.component.html',
   styleUrls: ['./main.component.css']
 })
+
 export class MainComponent implements OnInit {
 
   tokenList = new Array<Token>();
   analyzer = new LexicalAnalyzer();
   parser = new SyntacticAnalyzer();
   sintacticErrors = new Array<string>();
-  countOfTabs = 0;
+  showF = false;
+  public static countOfTabs = 0;
 
   tabs = new Array<Tab>();
 
   constructor() {}
 
   ngOnInit(): void {
+    document.getElementById('mi-file').addEventListener('change', this.openFile, false);
   }
 
   analizeText(Form: NgForm){
@@ -45,8 +48,41 @@ export class MainComponent implements OnInit {
   }
 
   addTab(){
-    this.tabs.push(new Tab("TabNo" + this.countOfTabs, "Nuevo" + this.countOfTabs, ""));
-    this.countOfTabs++;
+    this.tabs.push(new Tab("TabNo" + MainComponent.countOfTabs, "Nuevo" + MainComponent.countOfTabs, ""));
+    MainComponent.countOfTabs++;
+  }
+  
+  fileName: string = "";
+  public static newTab: Tab = new Tab("", "", "");
+  openFile(_evt){
+    this.fileName = _evt.target.files[0].name;
+    
+    let file = _evt.target.files[0];
+    if(!file){
+      return;
+    }
+
+    MainComponent.newTab = new Tab("TabNo" + MainComponent.countOfTabs, this.fileName, "");
+    MainComponent.countOfTabs++;
+
+    let reader = new FileReader();    
+    reader.onload = function(){
+      let text = reader.result;
+      console.log(text);
+      MainComponent.newTab.text = text.toString();
+    };
+    reader.readAsText(file);
+    
+  }
+
+  useOpenFile(){
+    this.showF = true;  
+  }
+
+  endOpenFile(){
+    let newnewTab = new Tab(MainComponent.newTab.id, MainComponent.newTab.name, MainComponent.newTab.text);
+    this.tabs.push(newnewTab);
+    this.showF = false;
   }
 
 }

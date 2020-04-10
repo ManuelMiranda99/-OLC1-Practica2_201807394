@@ -9,3 +9,21 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background-
 a:hover{ color: white; }
 
 textarea .cs{ background-color: black; color: white; }
+
+input[type="file"]#mi-file {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+label[for="mi-file"]{
+    color: black;
+    background-color: white;
+    display: inline-block;
+    transition: all .5s;
+    cursor: pointer;
+    width: fit-content;
+}

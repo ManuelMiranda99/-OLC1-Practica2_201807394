@@ -9,7 +9,8 @@
 
         <div class="dropdown-menu">
             <a href="#" (click)="addTab()" class="dropdown-item">Crear Nuevo</a>
-            <a href="#" class="dropdown-item">Abrir Documento</a>
+            <span><input type="file" name="mi-file" id="mi-file" accept=".cs" (click)="useOpenFile()"></span>
+            <label for="mi-file"><a class="dropdown-item">Abrir Documento</a></label>
             <a href="#" class="dropdown-item">Guardar</a>
             <a href="#" class="dropdown-item">Guardar Como</a>
         </div>
@@ -44,6 +45,12 @@
 </div>
 
 -->
+
+<div class="opt" *ngIf="showF==true"> 
+    <span>Desea confirmar que quiere abrir un archivo? <a class="btn btn-danger" (click)="endOpenFile()">Si</a></span>
+</div>
+
+
 <ul class="nav nav-tabs" id="myTabs" role="tablist">
     <li *ngFor="let tab of tabs" class="nav-item">
         <a class="nav-link tab-link" id="{{tab.id}}-tab" data-toggle="tab" href="#{{tab.id}}" role="tab" attr.aria-controls="{{tab.id}}">{{tab.name}}</a>
@@ -66,7 +73,7 @@
                         <div class="card-body">
                             <form #CSharp="ngForm" (ngSubmit)="analizeText(CSharp)">
                                 <div class="form-group">                                    
-                                    <textarea [(ngModel)]="tab.text" name="text" id="text" cols="100" rows="20" class="form-control cs"  style="background: gray;color: white;"></textarea>
+                                    <textarea [(ngModel)]="tab.text" name="text" id="text-{{tab.name}}" cols="100" rows="20" class="form-control cs"  style="background: gray;color: white;"></textarea>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col">
