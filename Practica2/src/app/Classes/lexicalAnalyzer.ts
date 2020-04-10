@@ -161,6 +161,18 @@ export class LexicalAnalyzer{
                         this.addToken("S_TWO_POINTS");
                         this.col++;
                     }
+                    else if(char === "|"){
+                        this.txtAux += char;
+                        this.colF = this.col;
+                        this.col++;
+                        this.state = 25;
+                    }
+                    else if(char === "&"){
+                        this.txtAux += char;
+                        this.colF = this.col;
+                        this.col++;
+                        this.state = 26;
+                    }
                     else if(char === "\n"){ this.row++; this.col = 1; }
                     else if(char === " " || char === "\t") {  }
                     else{
@@ -377,6 +389,28 @@ export class LexicalAnalyzer{
                     }
                     else{
                         this.addToken("S_NOT");
+                        i--;
+                    }
+                    break;
+                case 25:
+                    if(char === "|"){
+                        this.txtAux += char;
+                        this.col++;
+                        this.addToken("S_OR");
+                    }
+                    else{
+                        this.addToken("UNKNOWN");
+                        i--;
+                    }
+                    break;
+                case 26:
+                    if(char === "&"){
+                        this.txtAux += char;
+                        this.col++;
+                        this.addToken("S_AND");
+                    }
+                    else{
+                        this.addToken("UNKNOWN");
                         i--;
                     }
                     break;

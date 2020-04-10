@@ -578,8 +578,34 @@ export class SyntacticAnalyzer{
     }
 
     Expression(){
+        this.OptNot();
         this.E();
         this.OptComparisonSymbol();
+        this.AndOrOpt();
+    }
+
+    OptNot(){
+        if(this.preanalisis.type === "S_NOT"){
+            this.Parea("S_NOT");
+            this.OptNot();
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    AndOrOpt(){
+        if(this.preanalisis.type === "S_AND"){
+            this.Parea("S_AND");
+            this.Expression();
+        }
+        else if(this.preanalisis.type === "S_OR"){
+            this.Parea("S_OR");
+            this.Expression();
+        }
+        else{
+            // Epsilon
+        }
     }
 
     OptComparisonSymbol(){
@@ -653,6 +679,11 @@ export class SyntacticAnalyzer{
     }
 
     F(){
+        this.OptNot();
+        this.FF();
+    }
+
+    FF(){
         if(this.preanalisis.type === "INTEGER"){
             this.Parea("INTEGER");
         }
@@ -672,6 +703,11 @@ export class SyntacticAnalyzer{
         }
         else if(this.preanalisis.type === "WR_FALSE"){
             this.Parea("WR_FALSE");
+        }
+        else if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+            this.Parea("S_OPEN_PARENTHESIS");
+            this.Expression();
+            this.Parea("S_CLOSE_PARENTHESIS");
         }
         else{
             // Error

@@ -44,6 +44,8 @@ export class Token{
             S_PRODUCT: '*',
             S_DIVISION: '/',
             S_NOT: '!',
+            S_AND: '&&'
+            S_OR: '||'
             INCREMENT_OR_DECREMENT: 'Incremento o Decremento',
             S_INCREMENT: '++',
             S_DECREMENT: '--',
@@ -145,6 +147,7 @@ export class Token{
                     this.type = "WR_BOOL";
                     break;
                 case "string":
+                case "String":
                     this.type = "WR_STRING";
                     break;
                 default:
