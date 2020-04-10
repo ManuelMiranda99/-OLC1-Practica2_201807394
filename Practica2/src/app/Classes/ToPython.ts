@@ -39,7 +39,13 @@ export class ToPython{
         this.text += this.InsertTabs(_tabs) + "print()\n";
     }
 
-    
+    TraduceIf(_condition: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + _condition + "\n";
+    }
+
+    TraduceSwitch(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "def switch(case)";
+    }
 
     InsertTabs(_tabs: number): string{
         let txt = "";

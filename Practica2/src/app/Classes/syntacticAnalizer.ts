@@ -22,6 +22,7 @@ export class SyntacticAnalyzer{
 
     PassComments(){
         while(this.preanalisis.type === "ONE_LINE_COMMENT" || this.preanalisis.type === "MULTILINE_COMMENT"){
+            this.traductor.TraduceComment(this.preanalisis.lexeme, this.preanalisis.type, this.tabs);
             this.index++;
             this.preanalisis = this.tokenList[this.index];
         }
@@ -49,6 +50,7 @@ export class SyntacticAnalyzer{
             if(this.preanalisis.type != _tokenType && this.preanalisis.type != "ONE_LINE_COMMENT" && this.preanalisis.type != "MULTILINE_COMMENT"){
                 // Sintactic Error
                 console.log("Error sintactico");
+                console.log("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "] en linea " + this.preanalisis.row);
                 this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]");
                 this.sintacticError = true;
                 this.errorF = true;
@@ -270,37 +272,46 @@ export class SyntacticAnalyzer{
     }
 
     SentencesList(){
+        this.tabs++;
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
         this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.DeclarationSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "ID"){
             this.AssignmentOrCallSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_CONSOLE"){
             this.PrintSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_IF"){
             this.IfElseSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_SWITCH"){
             this.SwitchSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_FOR"){
             this.ForSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_WHILE"){
             this.WhileSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else if(this.preanalisis.type === "WR_DO"){
             this.DoWhileSentence();
+            this.tabs--;
             this.SentencesList();
         }
         else {
@@ -364,9 +375,23 @@ export class SyntacticAnalyzer{
         this.Parea("S_POINT");
         this.Parea("WR_WRITE");
         this.Parea("S_OPEN_PARENTHESIS");
-        this.Expression();
+        this.Impression();
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_SEMICOLON");
+    }
+
+    impressionList: Array<string> = new Array<string>();
+    Impression(){
+        this.impressionList = [];
+        if(this.preanalisis.type === "INTEGER" || this.preanalisis.type === "DECIMAL" || this.preanalisis.type === "STRING" || this.preanalisis.type === "HTML_STRING" || this.preanalisis.type === "NORMAL_STRING" ||
+        this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE" || this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+            this.Expression();
+            this.traductor.TraducePrint(this.impressionList, this.tabs);
+        }
+        else{
+            // Print without expression
+            this.traductor.TraducePrint2(this.tabs);
+        }
     }
 
     IfElseSentence(){
@@ -377,6 +402,10 @@ export class SyntacticAnalyzer{
         this.Parea("S_OPEN_KEY");
 
         this.SentencesList();
+
+        this.AddFunctionOrMethod();
+
+        this.tabs--;
 
         this.Parea("S_CLOSE_KEY");
         
@@ -391,6 +420,10 @@ export class SyntacticAnalyzer{
             this.Parea("S_OPEN_KEY");
 
             this.SentencesList();
+
+            this.AddFunctionOrMethod();
+
+            this.tabs--;
 
             this.Parea("S_CLOSE_KEY");
         }
@@ -434,7 +467,9 @@ export class SyntacticAnalyzer{
 
             this.AddFunctionOrMethod();
 
-            this.SentencesListSwitch();            
+            this.SentencesListSwitch();
+
+            this.tabs--;
 
             this.CaseList();
         }
@@ -453,6 +488,8 @@ export class SyntacticAnalyzer{
             this.AddFunctionOrMethod();
 
             this.SentencesListSwitch();
+
+            this.tabs--;
 
         }
         else{
@@ -477,6 +514,8 @@ export class SyntacticAnalyzer{
         this.AddFunctionOrMethod();
 
         this.SentencesListLoops();
+
+        this.tabs--;
 
         this.Parea("S_CLOSE_KEY");
     }
@@ -523,6 +562,8 @@ export class SyntacticAnalyzer{
 
         this.SentencesListLoops();
 
+        this.tabs--;
+
         this.Parea("S_CLOSE_KEY");
     }
 
@@ -536,6 +577,8 @@ export class SyntacticAnalyzer{
 
         this.SentencesListLoops();
 
+        this.tabs--;
+
         this.Parea("S_CLOSE_KEY");
         this.Parea("WR_WHILE");
         this.Parea("S_OPEN_PARENTHESIS");
@@ -546,8 +589,8 @@ export class SyntacticAnalyzer{
     }
 
     ParameterListCall(){
-        if(this.preanalisis.type === "INTEGER" || this.preanalisis.type === "DECIMAL" || this.preanalisis.type === "STRING" ||
-        this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE"){
+        if(this.preanalisis.type === "INTEGER" || this.preanalisis.type === "DECIMAL" || this.preanalisis.type === "STRING" || this.preanalisis.type === "HTML_STRING" || this.preanalisis.type === "NORMAL_STRING" ||
+        this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE" || this.preanalisis.type === "S_OPEN_PARENTHESIS"){
             this.Expression();
             this.PList();
         }
@@ -558,6 +601,7 @@ export class SyntacticAnalyzer{
 
     PList(){
         if(this.preanalisis.type === "S_COMMA"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_COMMA");
             this.Expression();
             this.PList();
@@ -576,6 +620,7 @@ export class SyntacticAnalyzer{
 
     OptNot(){
         if(this.preanalisis.type === "S_NOT"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_NOT");
             this.OptNot();
         }
@@ -635,11 +680,13 @@ export class SyntacticAnalyzer{
 
     EP(){
         if(this.preanalisis.type === "S_PLUS"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_PLUS");
             this.T();
             this.EP();
         }
         else if(this.preanalisis.type === "S_MINUS"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_MINUS");
             this.T();
             this.EP();
@@ -656,10 +703,12 @@ export class SyntacticAnalyzer{
 
     TP(){
         if(this.preanalisis.type === "S_PRODUCT"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_PRODUCT");
             this.F();
         }
         else if(this.preanalisis.type === "S_DIVISION"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_DIVISION");
             this.F();
         }
@@ -675,28 +724,36 @@ export class SyntacticAnalyzer{
 
     FF(){
         if(this.preanalisis.type === "INTEGER"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("INTEGER");
         }
         else if(this.preanalisis.type === "DECIMAL"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("DECIMAL");
         }
         else if(this.preanalisis.type === "NORMAL_STRING" || this.preanalisis.type === "HTML_STRING"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.preanalisis.type = "STRING";
             this.Parea("STRING")
         }
         else if(this.preanalisis.type === "ID"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("ID");
             this.OptUseFunction();
         }
         else if(this.preanalisis.type === "WR_TRUE"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("WR_TRUE");
         }
         else if(this.preanalisis.type === "WR_FALSE"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("WR_FALSE");
         }
         else if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_OPEN_PARENTHESIS");
             this.Expression();
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_CLOSE_PARENTHESIS");
         }
         else{
@@ -707,8 +764,10 @@ export class SyntacticAnalyzer{
 
     OptUseFunction(){
         if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_OPEN_PARENTHESIS");
             this.ParameterListCall();
+            this.impressionList.push(this.preanalisis.lexeme);
             this.Parea("S_CLOSE_PARENTHESIS");
         }
         else{

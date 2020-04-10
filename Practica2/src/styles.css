@@ -8,4 +8,4 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background-
 
 a:hover{ color: white; }
 
-textarea { background-color: black; color: white; }
+textarea .cs{ background-color: black; color: white; }
