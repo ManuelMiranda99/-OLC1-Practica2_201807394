@@ -40,17 +40,59 @@ export class ToPython{
     }
 
     TraduceIf(_condition: string, _tabs: number){
-        this.text += this.InsertTabs(_tabs) + _condition + "\n";
+        this.text += this.InsertTabs(_tabs) + _condition + ":\n";
     }
 
     TraduceSwitch(_tabs: number){
         this.text += this.InsertTabs(_tabs) + "def switch(case)";
     }
 
+    TraduceBegginigOfMain(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "def main():\n";
+    }
+
+    TraduceEndOfMain(_tabs: number){
+        this.text += "\n"+ this.InsertTabs(_tabs) + "if _name_=\"_main_\":\n" +
+                     this.InsertTabs(_tabs + 1) + "main()\n";
+    }
+
+    TraduceMethFunc(_name: string, _params:string, _tabs: number){
+        this.text += "\n"+ this.InsertTabs(_tabs) + "def " + _name + "(" + _params + "):\n";
+    }
+
+    TraduceFor(){
+
+    }
+
+    TraduceWhile(_condition: string,_tabs: number){
+        this.text+= this.InsertTabs(_tabs) + "while " + _condition + ":\n";
+    }
+
+    TraduceBegginigOfDo(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "while True:\n"
+    }
+
+    TraduceEndOfDo(_condition: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + "if (" + _condition + "):\n"
+                     this.InsertTabs(_tabs + 1) + "break\n";
+    }
+
+    TraduceReturn(_value: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + "return " + _value + "\n";
+    }
+
+    TraduceBreak(_tabs:number){
+        this.text += this.InsertTabs(_tabs) + "break\n";
+    }
+
+    TraduceContinue(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "continue\n";
+    }
+
     InsertTabs(_tabs: number): string{
         let txt = "";
         for(let i =0; i < _tabs; i++){
-            txt += "\t";
+            txt += "     ";
         }
 
         return txt;

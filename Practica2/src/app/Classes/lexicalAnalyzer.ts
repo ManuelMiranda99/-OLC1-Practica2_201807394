@@ -16,7 +16,7 @@ export class LexicalAnalyzer{
 
     scanText(_text:string): Array<Token> {
                 
-        console.log("Entro a escanear");
+        //console.log("Entro a escanear");
 
         this.tokenList = new Array<Token>();
 
@@ -177,7 +177,7 @@ export class LexicalAnalyzer{
                     else if(char === " " || char === "\t") {  }
                     else{
                         if(char === "#"){
-                            console.log("Analisis finalizado con exito");
+                            //console.log("Analisis finalizado con exito");
                         }
                         else{
                             this.txtAux += char;
