@@ -1,4 +1,11 @@
 /* You can add global styles to this file, and also import other style files */
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; background-color: gray;}
+.tab-link { margin: 10px; background-color: black; color: white; }
+
+.tab-link:hover { border-color: white; color : white; }
+
+a:hover{ color: white; }
+
+textarea { background-color: black; color: white; }

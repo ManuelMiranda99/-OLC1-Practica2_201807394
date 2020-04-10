@@ -37,6 +37,7 @@ export class SyntacticAnalyzer{
     }
 
     Parea(_tokenType: string){
+        this.PassComments();
         if(this.sintacticError){
             this.index++;
             this.preanalisis = this.tokenList[this.index];
@@ -51,15 +52,8 @@ export class SyntacticAnalyzer{
                 this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]");
                 this.sintacticError = true;
                 this.errorF = true;
-            }
-            if(this.preanalisis.type != "ULTIMO"){
-                if(this.preanalisis.type === "ONE_LINE_COMMENT" || this.preanalisis.type === "MULTILINE_COMMENT"){
-                    do{
-                        // traductor.TraduceComment();
-                        this.index++;
-                        this.preanalisis = this.tokenList[this.index];
-                    }while(this.preanalisis.type == "ONE_LINE_COMMENT" || this.preanalisis.type == "MULTILINE_COMMENT");
-                }
+            }            
+            if(this.preanalisis.type != "LAST"){
                 if(this.preanalisis.type != _tokenType){
                     // Sintactic Error
                     console.log("Error sintactico");
@@ -69,13 +63,7 @@ export class SyntacticAnalyzer{
                 }
                 this.index++;
                 this.preanalisis = this.tokenList[this.index];
-                do{
-                    if(this.preanalisis.type == "ONE_LINE_COMMENT" || this.preanalisis.type == "MULTILINE_COMMENT"){
-                        // traductor.TraduceComment();
-                        this.index++;
-                        this.preanalisis = this.tokenList[this.index];
-                    }
-                }while(this.preanalisis.type == "ONE_LINE_COMMENT" || this.preanalisis.type == "MULTILINE_COMMENT");
+                this.PassComments();
             }
 
         }
@@ -86,7 +74,7 @@ export class SyntacticAnalyzer{
         this.index = 0;
         this.tokenList = _tokenList;
 
-        this.tokenList.push(new Token("ULTIMO", "ULTIMO", "GG", "GG"));
+        this.tokenList.push(new Token("LAST", "LAST", "GG", "GG"));
 
         this.preanalisis = this.tokenList[this.index];
 
@@ -101,6 +89,8 @@ export class SyntacticAnalyzer{
         this.InsideClass();
 
         this.Parea("S_CLOSE_KEY");
+
+        this.Parea("LAST");
 
         return this.errorsList;
     }
