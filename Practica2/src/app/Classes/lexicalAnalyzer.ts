@@ -16,7 +16,7 @@ export class LexicalAnalyzer{
 
     scanText(_text:string): Array<Token> {
                 
-        console.log("Entro a escanear");
+        //console.log("Entro a escanear");
 
         this.tokenList = new Array<Token>();
 
@@ -161,11 +161,23 @@ export class LexicalAnalyzer{
                         this.addToken("S_TWO_POINTS");
                         this.col++;
                     }
+                    else if(char === "|"){
+                        this.txtAux += char;
+                        this.colF = this.col;
+                        this.col++;
+                        this.state = 25;
+                    }
+                    else if(char === "&"){
+                        this.txtAux += char;
+                        this.colF = this.col;
+                        this.col++;
+                        this.state = 26;
+                    }
                     else if(char === "\n"){ this.row++; this.col = 1; }
-                    else if(char === " " || char === "\t") {  }
+                    else if(char === " " || char === "\t" || char === "\r") {  }
                     else{
                         if(char === "#"){
-                            console.log("Analisis finalizado con exito");
+                            //console.log("Analisis finalizado con exito");
                         }
                         else{
                             this.txtAux += char;
@@ -380,6 +392,28 @@ export class LexicalAnalyzer{
                         i--;
                     }
                     break;
+                case 25:
+                    if(char === "|"){
+                        this.txtAux += char;
+                        this.col++;
+                        this.addToken("S_OR");
+                    }
+                    else{
+                        this.addToken("UNKNOWN");
+                        i--;
+                    }
+                    break;
+                case 26:
+                    if(char === "&"){
+                        this.txtAux += char;
+                        this.col++;
+                        this.addToken("S_AND");
+                    }
+                    else{
+                        this.addToken("UNKNOWN");
+                        i--;
+                    }
+                    break;
                 default:
                     console.log("Pero que leches");
                     break;
@@ -401,7 +435,7 @@ export class LexicalAnalyzer{
     }
 
     addToken(_tokenType: string){
-        console.log("Agregando " + _tokenType);
+        //console.log("Agregando " + _tokenType);
         this.tokenList.push(new Token(_tokenType, this.txtAux, this.row.toString(), this.col.toString()));
         this.txtAux = "";
         this.state = 0;
