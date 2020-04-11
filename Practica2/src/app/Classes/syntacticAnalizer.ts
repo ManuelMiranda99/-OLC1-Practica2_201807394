@@ -14,7 +14,7 @@ export class SyntacticAnalyzer{
     flagFunction: boolean = false;
     flagMethod: boolean = false;
 
-    traductor: ToPython = new ToPython();
+    traductor: ToPython;
 
     constructor(){
         
@@ -51,7 +51,7 @@ export class SyntacticAnalyzer{
                 // Sintactic Error
                 console.log("Error sintactico");
                 console.log("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "] en linea " + this.preanalisis.row);
-                this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]");
+                this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "] en linea " + this.preanalisis.row);
                 this.sintacticError = true;
                 this.errorF = true;
             }            
@@ -73,7 +73,9 @@ export class SyntacticAnalyzer{
 
     Start(_tokenList: Array<Token>): Array<string>{
 
+        this.traductor = new ToPython();
         this.index = 0;
+        this.errorsList = [];
         this.tokenList = _tokenList;
 
         this.tokenList.push(new Token("LAST", "LAST", "GG", "GG"));

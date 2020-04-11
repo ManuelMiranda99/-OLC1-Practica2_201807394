@@ -71,7 +71,7 @@
                         </div>
         
                         <div class="card-body">
-                            <form #CSharp="ngForm" (ngSubmit)="analizeText(CSharp)">
+                            <form #CSharp="ngForm" (ngSubmit)="analizeText(CSharp, tab)">
                                 <div class="form-group">                                    
                                     <textarea [(ngModel)]="tab.text" name="text" id="text-{{tab.name}}" cols="100" rows="20" class="form-control cs"  style="background: gray;color: white;"></textarea>
                                 </div>
@@ -97,7 +97,7 @@
                         <div class="card-body">
                             <form>
                                 <div class="form-group">
-                                    <textarea name="PythonText" id="PythonText" cols="100" rows="20" class="form-control" readonly></textarea>
+                                    <textarea [(ngModel)]="tab.pythonText" name="PythonText" id="PythonText" cols="100" rows="20" class="form-control" readonly></textarea>
                                 </div>
                             </form>
                         </div>

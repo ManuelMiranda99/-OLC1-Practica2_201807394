@@ -174,7 +174,7 @@ export class LexicalAnalyzer{
                         this.state = 26;
                     }
                     else if(char === "\n"){ this.row++; this.col = 1; }
-                    else if(char === " " || char === "\t") {  }
+                    else if(char === " " || char === "\t" || char === "\r") {  }
                     else{
                         if(char === "#"){
                             //console.log("Analisis finalizado con exito");

@@ -29,7 +29,7 @@ export class MainComponent implements OnInit {
     document.getElementById('mi-file').addEventListener('change', this.openFile, false);
   }
 
-  analizeText(Form: NgForm){
+  analizeText(Form: NgForm, actualTab: Tab){
 
     let text = Form.value.text;    
 
@@ -44,6 +44,16 @@ export class MainComponent implements OnInit {
     }
 
     this.sintacticErrors = this.parser.Start(this.tokenList);
+
+    if(this.sintacticErrors.length > 0){
+      actualTab.pythonText = "Errores sintacticos. No se puede generar traduccion\n\n";
+      for(let i = 0; i < this.sintacticErrors.length; i++){
+        actualTab.pythonText += "\t\t" + this.sintacticErrors[i] + "\n";
+      }
+    }
+    else{
+      actualTab.pythonText = this.parser.traductor.text;
+    }    
 
   }
 
