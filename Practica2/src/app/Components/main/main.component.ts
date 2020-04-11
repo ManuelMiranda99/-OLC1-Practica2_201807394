@@ -19,6 +19,9 @@ export class MainComponent implements OnInit {
   parser = new SyntacticAnalyzer();
   sintacticErrors = new Array<string>();
   showF = false;
+  save = false;
+  fileNameSave = "DocumentoCS.cs";
+  actualTab: Tab = new Tab("", "", "");
   public static countOfTabs = 0;
 
   tabs = new Array<Tab>();
@@ -28,6 +31,17 @@ export class MainComponent implements OnInit {
   ngOnInit(): void {
     document.getElementById('mi-file').addEventListener('change', this.openFile, false);
   }
+
+
+
+
+
+
+
+
+
+
+
 
   analizeText(Form: NgForm, actualTab: Tab){
 
@@ -40,6 +54,12 @@ export class MainComponent implements OnInit {
       if(token.type === "UNKNOWN"){
         flag = true;
         break;
+      }
+    }
+
+    for(let token of this.tokenList){
+      if(token.type === "HTML_STRING"){
+        // Analize HTML text
       }
     }
 
@@ -57,11 +77,25 @@ export class MainComponent implements OnInit {
 
   }
 
+
+
+
+
+
+
+
+
+
+
+  
+  // Adding tabs to the screen
   addTab(){
     this.tabs.push(new Tab("TabNo" + MainComponent.countOfTabs, "Nuevo" + MainComponent.countOfTabs, ""));
+    this.fileNameSave = "Nuevo" + MainComponent.countOfTabs;
     MainComponent.countOfTabs++;
   }
   
+  /* --------------- Open a File --------------- */
   fileName: string = "";
   public static newTab: Tab = new Tab("", "", "");
   openFile(_evt){
@@ -93,6 +127,49 @@ export class MainComponent implements OnInit {
     let newnewTab = new Tab(MainComponent.newTab.id, MainComponent.newTab.name, MainComponent.newTab.text);
     this.tabs.push(newnewTab);
     this.showF = false;
+    this.fileNameSave = newnewTab.name;
   }
 
+  /* --------------- Set actual tab for the save and save as function --------------- */
+  setActualText(_tab: Tab){
+    this.actualTab = _tab;
+  }
+
+  /* --------------- Save files --------------- */
+  saveF(){
+    if(this.tabs.length > 0 ){
+      this.saveFile();
+    }    
+  }
+
+  saveFA(){
+    if(this.tabs.length > 0 ){
+      this.save = true;
+    }        
+  }
+
+  saveFile(){
+    let textFileBlob = new Blob([this.actualTab.text], {type: 'text/plain'});    
+
+    let downloadLink = document.createElement("a");
+
+    downloadLink.download = this.fileNameSave;
+
+    this.actualTab.name = this.fileNameSave;
+
+    downloadLink.innerHTML = "GG?";
+
+    window.URL = window.URL || window.webkitURL;
+
+    downloadLink.href = window.URL.createObjectURL(textFileBlob);
+
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+
+    downloadLink.click();
+
+    this.fileNameSave = "DocumentoCS.cs";
+    this.save = false;
+  }
 }

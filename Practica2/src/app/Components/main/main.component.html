@@ -8,11 +8,16 @@
         <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Archivo</a>      
 
         <div class="dropdown-menu">
+            
             <a href="#" (click)="addTab()" class="dropdown-item">Crear Nuevo</a>
+            
             <span><input type="file" name="mi-file" id="mi-file" accept=".cs" (click)="useOpenFile()"></span>
             <label for="mi-file"><a class="dropdown-item">Abrir Documento</a></label>
-            <a href="#" class="dropdown-item">Guardar</a>
-            <a href="#" class="dropdown-item">Guardar Como</a>
+            
+            <a (click)="saveF()" class="dropdown-item">Guardar</a>
+
+            <a (click)="saveFA()" href="#" class="dropdown-item">Guardar Como</a>
+        
         </div>
 
         </li>
@@ -46,19 +51,23 @@
 
 -->
 
-<div class="opt" *ngIf="showF==true"> 
-    <span>Desea confirmar que quiere abrir un archivo? <a class="btn btn-danger" (click)="endOpenFile()">Si</a></span>
+<div class="opt" *ngIf="showF==true"  style="text-align: center;"> 
+    <span  style="color: white;font-size: 20px;">Desea confirmar que quiere abrir un archivo? <a class="btn btn-danger" (click)="endOpenFile()">Si</a></span>
 </div>
 
 
 <ul class="nav nav-tabs" id="myTabs" role="tablist">
     <li *ngFor="let tab of tabs" class="nav-item">
-        <a class="nav-link tab-link" id="{{tab.id}}-tab" data-toggle="tab" href="#{{tab.id}}" role="tab" attr.aria-controls="{{tab.id}}">{{tab.name}}</a>
+        <a (click)="setActualText(tab)" class="nav-link tab-link" id="{{tab.id}}-tab" data-toggle="tab" href="#{{tab.id}}" role="tab" attr.aria-controls="{{tab.id}}">{{tab.name}}</a>
     </li>
 </ul>
 
 <div class="tab-content" id="myTabContent">
     <div *ngFor="let tab of tabs" class="tab-pane fade show" id="{{tab.id}}" role="tabpanel" attr.aria-labelledby="{{tab.id}}-tab">
+
+        <div *ngIf="save==true">
+            <input [(ngModel)]="fileNameSave" type="text" name="file-name" id="file-name" placeholder="Ingrese el nombre del archivo"><button (click)="saveFile()">Guardar</button>
+        </div>
 
         <div class="container-fluid">
             <!--Text and Python-->
@@ -117,7 +126,7 @@
         
                         <div class="card-body">
                             <table>
-        
+                                
                             </table>
                         </div>
                     </div>
@@ -132,7 +141,7 @@
                         <div class="card-body">
                             <form>
                                 <div class="form-group">
-                                    <textarea name="HTMLText" id="HTMLText" cols="100" rows="10" class="form-control" readonly></textarea>
+                                    <textarea [(ngModel)]="tab.htmlText" name="HTMLText" id="HTMLText" cols="100" rows="10" class="form-control" readonly></textarea>
                                 </div>
                             </form>
                         </div>
@@ -149,7 +158,7 @@
                         <div class="card-body">
                             <form>
                                 <div class="form-group">
-                                    <textarea name="JSONText" id="JSONText" cols="100" rows="10" class="form-control" readonly></textarea>
+                                    <textarea [(ngModel)]="tab.jsonText" name="JSONText" id="JSONText" cols="100" rows="10" class="form-control" readonly></textarea>
                                 </div>
                             </form>
                         </div>

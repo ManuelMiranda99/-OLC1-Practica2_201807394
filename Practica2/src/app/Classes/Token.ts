@@ -68,7 +68,12 @@ export class Token{
         ONE_LINE_COMMENT,
         MULTILINE_COMMENT
         UNKNOWN: 'Desconocido',
-        LAST: 'Ultimo'
+        LAST: 'Ultimo',
+
+        BegginingOfTAG
+        ContentOfTag
+        EndOfTag
+        WR_STYLE
     };*/
 
     type: string;
@@ -156,7 +161,7 @@ export class Token{
             }
         }else{
             this.type = _type;
-        }        
+        }
         this.lexeme = _lexeme;
         this.row = _row;
         this.column = _column;
