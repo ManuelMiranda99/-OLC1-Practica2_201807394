@@ -677,9 +677,11 @@ export class SyntacticAnalyzer{
     }
 
     WhileSentence(){
+        this.declarationValue = "";
         this.Parea("WR_WHILE");
         this.Parea("S_OPEN_PARENTHESIS");
         this.Expression();
+        this.traductor.TraduceWhile(this.declarationValue, this.tabs);
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_OPEN_KEY");
 
@@ -701,6 +703,7 @@ export class SyntacticAnalyzer{
     DoWhileSentence(){
         this.Parea("WR_DO");
         this.Parea("S_OPEN_KEY");
+        this.traductor.TraduceBegginigOfDo(this.tabs);
 
         this.loopList.push(1);
 
@@ -717,7 +720,9 @@ export class SyntacticAnalyzer{
         this.Parea("S_CLOSE_KEY");
         this.Parea("WR_WHILE");
         this.Parea("S_OPEN_PARENTHESIS");
+        this.declarationValue = "";
         this.Expression();
+        this.traductor.TraduceEndOfDo(this.declarationValue, this.tabs);
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_SEMICOLON");
     }
@@ -736,6 +741,7 @@ export class SyntacticAnalyzer{
     PList(){
         if(this.preanalisis.type === "S_COMMA"){
             this.addThings();            
+            this.declarationValue += " ";
             this.Parea("S_COMMA");
             this.Expression();
             this.PList();

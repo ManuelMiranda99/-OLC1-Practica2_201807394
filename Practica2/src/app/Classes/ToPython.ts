@@ -73,7 +73,7 @@ export class ToPython{
     }
 
     TraduceEndOfDo(_condition: string, _tabs: number){
-        this.text += this.InsertTabs(_tabs) + "if (" + _condition + "):\n"
+        this.text += this.InsertTabs(_tabs) + "if (" + _condition + "):\n" + 
                      this.InsertTabs(_tabs + 1) + "break\n";
     }
 
