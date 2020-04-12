@@ -14,7 +14,7 @@
             <span><input type="file" name="mi-file" id="mi-file" accept=".cs" (click)="useOpenFile()"></span>
             <label for="mi-file"><a class="dropdown-item">Abrir Documento</a></label>
             
-            <a (click)="saveF()" class="dropdown-item">Guardar</a>
+            <a (click)="saveF()" href="#" class="dropdown-item">Guardar</a>
 
             <a (click)="saveFA()" href="#" class="dropdown-item">Guardar Como</a>
         
@@ -82,7 +82,7 @@
                         <div class="card-body">
                             <form #CSharp="ngForm" (ngSubmit)="analizeText(CSharp, tab)">
                                 <div class="form-group">                                    
-                                    <textarea [(ngModel)]="tab.text" name="text" id="text-{{tab.name}}" cols="100" rows="20" class="form-control cs"  style="background: gray;color: white;"></textarea>
+                                    <textarea onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}" [(ngModel)]="tab.text" name="text" id="text-{{tab.name}}" cols="100" rows="20" class="form-control cs"  style="background: gray;color: white;"></textarea>
                                 </div>
                                 <div class="form-group row">
                                     <div class="col">

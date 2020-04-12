@@ -40,7 +40,7 @@ export class ToPython{
     }
 
     TraduceIf(_condition: string, _tabs: number){
-        this.text += this.InsertTabs(_tabs) + _condition + ":\n";
+        this.text += this.InsertTabs(_tabs) + _condition + " :\n";
     }
 
     TraduceSwitch(_tabs: number){
@@ -87,6 +87,10 @@ export class ToPython{
 
     TraduceContinue(_tabs: number){
         this.text += this.InsertTabs(_tabs) + "continue\n";
+    }
+
+    TraduceUseFunction(_function: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + _function + "\n";
     }
 
     InsertTabs(_tabs: number): string{

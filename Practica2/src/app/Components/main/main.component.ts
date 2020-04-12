@@ -91,7 +91,7 @@ export class MainComponent implements OnInit {
   // Adding tabs to the screen
   addTab(){
     this.tabs.push(new Tab("TabNo" + MainComponent.countOfTabs, "Nuevo" + MainComponent.countOfTabs, ""));
-    this.fileNameSave = "Nuevo" + MainComponent.countOfTabs;
+    this.fileNameSave = "Nuevo" + MainComponent.countOfTabs + ".cs";
     MainComponent.countOfTabs++;
   }
   
@@ -112,7 +112,7 @@ export class MainComponent implements OnInit {
     let reader = new FileReader();    
     reader.onload = function(){
       let text = reader.result;
-      console.log(text);
+      //console.log(text);
       MainComponent.newTab.text = text.toString();
     };
     reader.readAsText(file);
@@ -168,8 +168,7 @@ export class MainComponent implements OnInit {
     document.body.appendChild(downloadLink);
 
     downloadLink.click();
-
-    this.fileNameSave = "DocumentoCS.cs";
+    
     this.save = false;
   }
 }

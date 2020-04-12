@@ -5,6 +5,10 @@ export class SyntacticAnalyzer{
 
     tokenList: Array<Token> = new Array<Token>();
     errorsList: Array<string> = new Array<string>();
+
+    switchList: Array<number> = new Array<number>();
+    loopList: Array<number> = new Array<number>();
+
     index: number = 0;
     tabs: number = 0;
     preanalisis: Token;
@@ -35,6 +39,12 @@ export class SyntacticAnalyzer{
         else if(this.flagMethod){
             this.SentencesListMethod();
         }
+        if(this.switchList.length > 0){
+            this.SentencesListSwitch();
+        }
+        if(this.loopList.length > 0){
+            this.SentencesListLoops();
+        }
     }
 
     Parea(_tokenType: string){
@@ -57,9 +67,7 @@ export class SyntacticAnalyzer{
             }            
             if(this.preanalisis.type != "LAST"){
                 if(this.preanalisis.type != _tokenType){
-                    // Sintactic Error
-                    console.log("Error sintactico");
-                    this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]");
+                    // Sintactic Error                    
                     this.sintacticError = true;
                     this.errorF = true;
                 }
@@ -77,6 +85,9 @@ export class SyntacticAnalyzer{
         this.index = 0;
         this.errorsList = [];
         this.tokenList = _tokenList;
+
+        this.loopList = [];
+        this.switchList = [];
 
         this.tokenList.push(new Token("LAST", "LAST", "GG", "GG"));
 
@@ -102,7 +113,7 @@ export class SyntacticAnalyzer{
     nameF:string;
     InsideClass(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "S_NOT"){
             this.Type();
             this.idsDeclaration = [];
             this.idsDeclaration.push(this.preanalisis.lexeme);
@@ -234,10 +245,12 @@ export class SyntacticAnalyzer{
 
     SentencesListLoops(){
         if(this.preanalisis.type === "WR_BREAK"){
+            this.traductor.TraduceBreak(this.tabs);
             this.Parea("WR_BREAK");
             this.Parea("S_SEMICOLON");
         }
         else if(this.preanalisis.type === "WR_CONTINUE"){
+            this.traductor.TraduceContinue(this.tabs);
             this.Parea("WR_CONTINUE");
             this.Parea("S_SEMICOLON");
         }
@@ -248,6 +261,7 @@ export class SyntacticAnalyzer{
 
     SentencesListSwitch(){
         if(this.preanalisis.type === "WR_BREAK"){
+            this.traductor.TraduceBreak(this.tabs);
             this.Parea("WR_BREAK");
             this.Parea("S_SEMICOLON");
         }
@@ -299,6 +313,8 @@ export class SyntacticAnalyzer{
         this.Parea("ID");
         this.ParameterList();
     }
+
+    
 
     ParameterList(){
         if(this.preanalisis.type === "S_COMMA"){
@@ -406,10 +422,14 @@ export class SyntacticAnalyzer{
         }
     }
 
+    callF: string;
     AssignmentOrCallSentence(){
+        this.callF = this.preanalisis.lexeme;
+        
         this.declarationValue = "";
         this.idsDeclaration = [];
         this.idsDeclaration.push(this.preanalisis.lexeme);
+        
         this.Parea("ID");
         this.OptAorCall();
         this.Parea("S_SEMICOLON");
@@ -422,10 +442,16 @@ export class SyntacticAnalyzer{
             this.traductor.TraduceDecOrAssigOfVariable(this.idsDeclaration[0], this.declarationValue, this.tabs);
         }
         else if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+            this.callF += this.preanalisis.lexeme;
             this.Parea("S_OPEN_PARENTHESIS");
-            this.ParameterList();
+            this.ParameterListCall();
+            this.callF += this.declarationValue;
+            this.callF += this.preanalisis.lexeme;
+
+            this.traductor.TraduceUseFunction(this.callF, this.tabs);
+
             this.Parea("S_CLOSE_PARENTHESIS");            
-        }        
+        }
     }
 
     PrintSentence(){
@@ -442,7 +468,7 @@ export class SyntacticAnalyzer{
     Impression(){
         this.impressionList = [];
         if(this.preanalisis.type === "INTEGER" || this.preanalisis.type === "DECIMAL" || this.preanalisis.type === "STRING" || this.preanalisis.type === "HTML_STRING" || this.preanalisis.type === "NORMAL_STRING" ||
-        this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE" || this.preanalisis.type === "S_OPEN_PARENTHESIS"){
+        this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE" || this.preanalisis.type === "S_OPEN_PARENTHESIS" || this.preanalisis.type === "S_NOT"){
             this.Expression();
             this.traductor.TraducePrint(this.impressionList, this.tabs);
         }
@@ -452,10 +478,15 @@ export class SyntacticAnalyzer{
         }
     }
 
+    ifElseCondition: string;
     IfElseSentence(){
+        this.ifElseCondition = "if ";
         this.Parea("WR_IF");
         this.Parea("S_OPEN_PARENTHESIS");
         this.Expression();
+
+        this.traductor.TraduceIf(this.ifElseCondition, this.tabs);
+
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_OPEN_KEY");
 
@@ -474,8 +505,20 @@ export class SyntacticAnalyzer{
     OptElse(){
         if(this.preanalisis.type === "WR_ELSE"){
             this.Parea("WR_ELSE");
-            this.OptElseIf();
+
+            this.ElseIfOpt();
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    ElseIfOpt(){
+        if(this.preanalisis.type === "S_OPEN_KEY"){
+            this.ifElseCondition = "else";
             this.Parea("S_OPEN_KEY");
+
+            this.traductor.TraduceIf(this.ifElseCondition, this.tabs);
 
             this.SentencesList();
 
@@ -484,21 +527,35 @@ export class SyntacticAnalyzer{
             this.tabs--;
 
             this.Parea("S_CLOSE_KEY");
-        }
-        else{
-            // Epsilon
-        }
-    }
 
-    OptElseIf(){
-        if(this.preanalisis.type === "WR_IF"){
+        }
+        else if(this.preanalisis.type === "WR_IF"){
             this.Parea("WR_IF");
             this.Parea("S_OPEN_PARENTHESIS");
+
+            this.ifElseCondition = "elif ";
+
             this.Expression();
-            this.Parea("S_CLOSE_PARENTHESIS");            
+
+            this.Parea("S_CLOSE_PARENTHESIS");
+
+            this.Parea("S_OPEN_KEY");
+
+            this.traductor.TraduceIf(this.ifElseCondition, this.tabs);
+
+            this.SentencesList();
+
+            this.AddFunctionOrMethod();
+
+            this.tabs--;
+
+            this.Parea("S_CLOSE_KEY");
+
+            this.OptElse();
+
         }
         else{
-            // Epsilon
+            // ERROR
         }
     }
 
@@ -521,11 +578,15 @@ export class SyntacticAnalyzer{
             this.Expression();
             this.Parea("S_TWO_POINTS");
 
+            this.switchList.push(1);
+
             this.SentencesList();
 
             this.AddFunctionOrMethod();
 
             this.SentencesListSwitch();
+
+            this.switchList.pop();
 
             this.tabs--;
 
@@ -540,12 +601,16 @@ export class SyntacticAnalyzer{
         if(this.preanalisis.type === "WR_DEFAULT"){
             this.Parea("WR_DEFAULT");
             this.Parea("S_TWO_POINTS");
+
+            this.switchList.push(1);
             
             this.SentencesList();
 
             this.AddFunctionOrMethod();
 
             this.SentencesListSwitch();
+
+            this.switchList.pop();
 
             this.tabs--;
 
@@ -567,11 +632,15 @@ export class SyntacticAnalyzer{
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_OPEN_KEY");
 
+        this.loopList.push(1);
+
         this.SentencesList();
 
         this.AddFunctionOrMethod();
 
         this.SentencesListLoops();
+
+        this.loopList.pop();
 
         this.tabs--;
 
@@ -597,10 +666,10 @@ export class SyntacticAnalyzer{
 
     OptIncDec(){
         if(this.preanalisis.type === "S_INCREMENT"){
-            this.Parea("INCREMENT");
+            this.Parea("S_INCREMENT");
         }
         else if(this.preanalisis.type === "S_DECREMENT"){
-            this.Parea("DECREMENT");
+            this.Parea("S_DECREMENT");
         }
         else{
             // Epsilon
@@ -614,11 +683,15 @@ export class SyntacticAnalyzer{
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_OPEN_KEY");
 
+        this.loopList.push(1);
+
         this.SentencesList();
 
         this.AddFunctionOrMethod();
 
         this.SentencesListLoops();
+
+        this.loopList.pop();
 
         this.tabs--;
 
@@ -629,6 +702,8 @@ export class SyntacticAnalyzer{
         this.Parea("WR_DO");
         this.Parea("S_OPEN_KEY");
 
+        this.loopList.push(1);
+
         this.SentencesList();
 
         this.AddFunctionOrMethod();
@@ -637,12 +712,13 @@ export class SyntacticAnalyzer{
 
         this.tabs--;
 
+        this.loopList.pop();
+
         this.Parea("S_CLOSE_KEY");
         this.Parea("WR_WHILE");
         this.Parea("S_OPEN_PARENTHESIS");
         this.Expression();
         this.Parea("S_CLOSE_PARENTHESIS");
-        this.Parea("S_OPEN_KEY");
         this.Parea("S_SEMICOLON");
     }
 
@@ -659,8 +735,7 @@ export class SyntacticAnalyzer{
 
     PList(){
         if(this.preanalisis.type === "S_COMMA"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();            
             this.Parea("S_COMMA");
             this.Expression();
             this.PList();
@@ -679,8 +754,7 @@ export class SyntacticAnalyzer{
 
     OptNot(){
         if(this.preanalisis.type === "S_NOT"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_NOT");
             this.OptNot();
         }
@@ -691,14 +765,12 @@ export class SyntacticAnalyzer{
 
     AndOrOpt(){
         if(this.preanalisis.type === "S_AND"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_AND");
             this.Expression();
         }
         else if(this.preanalisis.type === "S_OR"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_OR");
             this.Expression();
         }
@@ -709,38 +781,32 @@ export class SyntacticAnalyzer{
 
     OptComparisonSymbol(){
         if(this.preanalisis.type === "S_EQUALS_EQUALS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_EQUALS_EQUALS");
             this.E();
         }
         else if(this.preanalisis.type === "S_MAJOR"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_MAJOR");
             this.E();
         }
         else if(this.preanalisis.type === "S_LESS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_LESS");
             this.E();
         }
         else if(this.preanalisis.type === "S_MAJOR_EQUALS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_MAJOR_EQUALS");
             this.E();
         }
         else if(this.preanalisis.type === "S_LESS_EQUALS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_LESS_EQUALS");
             this.E();
         }
         else if(this.preanalisis.type === "S_DIFFERENT"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_DIFFERENT");
             this.E();
         }
@@ -756,15 +822,13 @@ export class SyntacticAnalyzer{
 
     EP(){
         if(this.preanalisis.type === "S_PLUS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_PLUS");
             this.T();
             this.EP();
         }
         else if(this.preanalisis.type === "S_MINUS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_MINUS");
             this.T();
             this.EP();
@@ -781,16 +845,16 @@ export class SyntacticAnalyzer{
 
     TP(){
         if(this.preanalisis.type === "S_PRODUCT"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();;
             this.Parea("S_PRODUCT");
             this.F();
+            this.TP();
         }
         else if(this.preanalisis.type === "S_DIVISION"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_DIVISION");
             this.F();
+            this.TP();
         }
         else{
             // Epsilon
@@ -804,44 +868,39 @@ export class SyntacticAnalyzer{
 
     FF(){
         if(this.preanalisis.type === "INTEGER"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("INTEGER");
         }
         else if(this.preanalisis.type === "DECIMAL"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("DECIMAL");
         }
         else if(this.preanalisis.type === "NORMAL_STRING" || this.preanalisis.type === "HTML_STRING"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
+            
             this.preanalisis.type = "STRING";
             this.Parea("STRING")
         }
         else if(this.preanalisis.type === "ID"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("ID");
             this.OptUseFunction();
         }
         else if(this.preanalisis.type === "WR_TRUE"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
+            
             this.Parea("WR_TRUE");
         }
         else if(this.preanalisis.type === "WR_FALSE"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("WR_FALSE");
         }
         else if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_OPEN_PARENTHESIS");
             this.Expression();
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
+            
             this.Parea("S_CLOSE_PARENTHESIS");
         }
         else{
@@ -852,16 +911,20 @@ export class SyntacticAnalyzer{
 
     OptUseFunction(){
         if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_OPEN_PARENTHESIS");
             this.ParameterListCall();
-            this.declarationValue += this.preanalisis.lexeme;
-            this.impressionList.push(this.preanalisis.lexeme);
+            this.addThings();
             this.Parea("S_CLOSE_PARENTHESIS");
         }
         else{
             // Epsilon
         }
+    }
+
+    addThings(){
+        this.declarationValue += this.preanalisis.lexeme;
+        this.impressionList.push(this.preanalisis.lexeme);
+        this.ifElseCondition += this.preanalisis.lexeme;        
     }
 }
