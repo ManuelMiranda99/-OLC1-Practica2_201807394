@@ -43,8 +43,20 @@ export class ToPython{
         this.text += this.InsertTabs(_tabs) + _condition + " :\n";
     }
 
-    TraduceSwitch(_tabs: number){
-        this.text += this.InsertTabs(_tabs) + "def switch(case)";
+    TraduceBegginingSwitch(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "def switch(case):\n" + 
+                     this.InsertTabs(_tabs + 1) + "switcher = {\n";
+    }
+
+    TraduceCase(_expression: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + _expression + ":\n"
+    }
+    TraduceEndCase(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + ",\n";
+    }
+
+    TraduceEndSwitch(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "}\n"
     }
 
     TraduceBegginigOfMain(_tabs: number){
