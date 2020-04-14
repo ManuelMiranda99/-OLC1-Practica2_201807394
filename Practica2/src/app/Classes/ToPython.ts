@@ -40,11 +40,23 @@ export class ToPython{
     }
 
     TraduceIf(_condition: string, _tabs: number){
-        this.text += this.InsertTabs(_tabs) + _condition + ":\n";
+        this.text += this.InsertTabs(_tabs) + _condition + " :\n";
     }
 
-    TraduceSwitch(_tabs: number){
-        this.text += this.InsertTabs(_tabs) + "def switch(case)";
+    TraduceBegginingSwitch(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "def switch(case):\n" + 
+                     this.InsertTabs(_tabs + 1) + "switcher = {\n";
+    }
+
+    TraduceCase(_expression: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + _expression + ":\n"
+    }
+    TraduceEndCase(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + ",\n";
+    }
+
+    TraduceEndSwitch(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "}\n"
     }
 
     TraduceBegginigOfMain(_tabs: number){
@@ -73,7 +85,7 @@ export class ToPython{
     }
 
     TraduceEndOfDo(_condition: string, _tabs: number){
-        this.text += this.InsertTabs(_tabs) + "if (" + _condition + "):\n"
+        this.text += this.InsertTabs(_tabs) + "if (!(" + _condition + ")):\n" + 
                      this.InsertTabs(_tabs + 1) + "break\n";
     }
 
@@ -87,6 +99,10 @@ export class ToPython{
 
     TraduceContinue(_tabs: number){
         this.text += this.InsertTabs(_tabs) + "continue\n";
+    }
+
+    TraduceUseFunction(_function: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + _function + "\n";
     }
 
     InsertTabs(_tabs: number): string{

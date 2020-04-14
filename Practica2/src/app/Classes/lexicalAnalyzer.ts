@@ -420,17 +420,6 @@ export class LexicalAnalyzer{
             }
         }
 
-
-        /*
-        for(let token of this.tokenList){
-            console.log("TOKEN");
-            console.log("Tipo: " + token.type);
-            console.log("Lexema: \n" + token.lexeme);
-            console.log("\nFila: " + token.type);
-            console.log("Columna: " + token.lexeme);
-            console.log("\n\n");
-        }*/
-
         return this.tokenList;
     }
 
@@ -449,48 +438,201 @@ export class LexicalAnalyzer{
         _char = _char.toLowerCase();
         return _char.length === 1 && _char.match(/[a-z]/i);
     }
+    
+    htmlTokens: Array<Token> = [];
+    txtAuxH: string = "";
+    Hstate: number = 0;
+    scanHTML(_text: string): Array<Token>{
+        this.htmlTokens = [];        
 
-    GenerateErrorsReport(_tokenList: Array<Token>){
+        this.Hstate = 0;
 
-        let table = "<table>\n"+
-                    "\t<tr>\n" +
-                    "\t\t<td>No.</td>\n" + 
-                    "\t\t<td>Tipo de error</td>\n" + 
-                    "\t\t<td>Linea</td>\n" + 
-                    "\t\t<td>Columna</td>\n" + 
-                    "\t\t<td>Descripcion</td>\n" +
-                    "\t</tr>";
-        let x = 1;
-        for(let token of _tokenList){
-            if(token.type === "UNKNOWN"){
-                table += 
-                "\t<tr>\n" +
-                "\t\t<td>" + x + "</td>\n" + 
-                "\t\t<td>Léxico</td>\n" + 
-                "\t\t<td>" + token.row + "</td>\n" + 
-                "\t\t<td>" + token.column + "</td>\n" + 
-                "\t\t<td>El carácter '" + token.lexeme + "' no pertenece al lenguaje</td>\n" +
-                "\t</tr>\n";
-                x++;
+        let c = "";
+        this.txtAuxH = "";
+        _text = _text.replace("'", "");
+        for(let i = 0; i < _text.length; i++){
+            c = _text[i];
+
+            switch(this.Hstate){
+                case 0:
+                    if(c === "<"){
+                        this.Hstate = 1;
+                        this.txtAuxH += c;
+                    } 
+                    else{
+                        this.Hstate = 2;
+                        this.txtAuxH += c;
+                    }
+                    break;
+                // TAGs
+                case 1:
+                    if(c !== ">"){
+                        this.txtAuxH += c;                        
+                    }
+                    else{
+                        this.txtAuxH += c;
+                        this.addHTMLTAG("TAG");
+                    }
+                    break;
+                // Text
+                case 2:
+                    if(c !== "<"){
+                        this.txtAuxH += c;
+                    }
+                    else{
+                        // Add Text
+                        this.addHTMLTAG("HTML_TEXT");
+                        i--;
+                    }
+                    break;
             }
         }
-        table += "</table>";
-
-        let html =  "<html>\n " + 
-                    "\t<head>\n" +  
-                    "\t\t<title>Reporte de Errores</title>\n" +
-                    "\t</header>\n\n" +
-                    "<body>\n" + table +
-                    "\n</body>\n" + 
-                    "</html>";
-        var htmlFile = new Blob([html], {type: "text/plain; charset=utf-8"});
-        saveAs(htmlFile, "errores.html");
+        return this.htmlTokens;
     }
 
+    addHTMLTAG(_htmlToken: string){
+        if(_htmlToken === "TAG"){
+            let flagBT = false;
+            // regex = '(^</?)([-_a-zA-Z0-9:. "=]+)/?>'
+            if(this.txtAuxH.match('(^</?)([-_a-zA-Z0-9:. "=]+)>')){
+                let tag = "";
+                if(this.txtAuxH.includes("body")){
+                    // Analize body
+                    flagBT = this.checkStyle(this.txtAuxH);
+                    tag = "BODY_TAG";
+                }
+                else if(this.txtAuxH.includes("div")){
+                    flagBT = this.checkStyle(this.txtAuxH);
+                    tag = "DIV_TAG";
+                }
+                else{
+                    if(this.txtAuxH.includes("html")){
+                        tag = "HTML_TAG";
+                    }
+                    else if(this.txtAuxH.includes("head")){
+                        tag = "HEAD_TAG";
+                    }
+                    else if(this.txtAuxH.includes("title")){
+                        tag = "TITLE_TAG";
+                    }
+                    else if(this.txtAuxH.includes("br")){
+                        tag = "BR_TAG";
+                    }
+                    else if(this.txtAuxH.includes("p")){
+                        tag = "P_TAG";
+                    }
+                    else if(this.txtAuxH.match(/(h[1-4])/)){
+                        tag = "H_TAG";
+                    }
+                    else if(this.txtAuxH.includes("button")){
+                        tag = "BUTTON_TAG";
+                    }
+                    else if(this.txtAuxH.includes("label")){
+                        tag = "LABEL_TAG";
+                    }
+                    else if(this.txtAuxH.includes("input")){
+                        tag = "INPUT_TAG"
+                    }
+                    else{
+                        tag = "BAD_TAG";
+                    }
+                }
+
+                if(flagBT){
+                    this.htmlTokens.push(new Token("BAD_TAG", this.txtAuxH, "html", "html"));
+                }
+                else{
+                    if(this.txtAuxH.includes("/")){
+                        tag += "_CLOSE";
+                    }
+                    this.htmlTokens.push(new Token(tag, this.txtAuxH, "html", "html"));
+                }
+            }
+            else{
+                this.htmlTokens.push(new Token("BAD_TAG", this.txtAuxH, "html", "html"));
+            }
+        }
+        else{
+            this.htmlTokens.push(new Token(_htmlToken, this.txtAuxH, "html", "html"));
+        }
+        this.txtAuxH = "";
+        this.Hstate = 0;
+    }
+
+    checkStyle(_tag: string): boolean{
+        let text = "";
+        if(_tag.includes("body")){
+            // Scan body
+            _tag = _tag.replace(" ", "").replace("<", "").replace(">", "").replace("/", "").replace("\"", "");
+            for(let i = 0; i < _tag.length; i++){
+                text += _tag[i];
+                if(text === "body"){
+                    text = "";
+                }
+                else if(text === "style"){
+                    text = "";
+                }
+                else if(text === "="){
+                    text = "";
+                }
+                else if(text === "background"){
+                    text = "";
+                }
+                else if(text === ":"){
+                    text = "";
+                }
+                else if(text.match(/^(yellow|green|blue|red|white|skyblue)$/)){
+                    text = "";
+                }
+                else if(text === " "){
+                    text = "";
+                }
+                else if(text === "\""){
+                    text = "";
+                }
+            }
+            if(text.length > 0){
+                return true;
+            }
+        }
+        else{
+            // Scan div
+            _tag = _tag.replace(" ", "").replace("<", "").replace(">", "").replace("/", "");
+            for(let i = 0; i < _tag.length; i++){
+                text += _tag[i];
+                if(text === "div"){
+                    text = "";
+                }
+                else if(text === "style"){
+                    text = "";
+                }
+                else if(text === "="){
+                    text = "";
+                }
+                else if(text === "background"){
+                    text = "";
+                }
+                else if(text === ":"){
+                    text = "";
+                }
+                else if(text.match(/^(yellow|green|blue|red|white|skyblue)$/)){
+                    text = "";
+                }
+            }
+            if(text.length > 0){
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    htmlText: string = "";
     GenerateHTMLFile(){
-
+        
     }
 
+    jsonText: string = "";
     GenerateJSONFile(){
 
     }

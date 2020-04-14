@@ -68,7 +68,22 @@ export class Token{
         ONE_LINE_COMMENT,
         MULTILINE_COMMENT
         UNKNOWN: 'Desconocido',
-        LAST: 'Ultimo'
+        LAST: 'Ultimo',
+
+        HTML TOKENS:
+            TAG
+            htmlTAG
+            headTag
+            bodyTag
+            titleTag
+            divTag
+            brTag
+            pTag
+            h1Tag
+            buttonTag
+            labelTag
+            inputTag
+            TEXT
     };*/
 
     type: string;
@@ -76,7 +91,7 @@ export class Token{
     row: string;
     column: string;
 
-    constructor(_type: string, _lexeme: string, _row: string, _column: string){
+    constructor(_type: string, _lexeme: string, _row: string, _column: string){        
         if(_type == "ID"){
             switch(_lexeme){
                 case "class":
