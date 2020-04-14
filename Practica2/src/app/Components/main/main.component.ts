@@ -5,6 +5,7 @@ import { Tab } from 'src/app/Classes/Tab';
 import { NgForm } from '@angular/forms';
 import { FormsModule } from '@angular/forms'
 import { SyntacticAnalyzer } from 'src/app/Classes/syntacticAnalizer';
+import { Errors } from 'src/app/Classes/Errors';
 
 @Component({
   selector: 'app-main',
@@ -15,11 +16,14 @@ import { SyntacticAnalyzer } from 'src/app/Classes/syntacticAnalizer';
 export class MainComponent implements OnInit {
 
   tokenList = new Array<Token>();
+  htmlTAGs = new Array<Token>();
   analyzer = new LexicalAnalyzer();
   parser = new SyntacticAnalyzer();
-  sintacticErrors = new Array<string>();
+  sintacticErrors = new Array<Errors>();
+  GeneralErrors = new Array<Errors>();
   showF = false;
   save = false;
+  bErrors = false;
   fileNameSave = "DocumentoCS.cs";
   actualTab: Tab = new Tab("", "", "");
   public static countOfTabs = 0;
@@ -47,6 +51,8 @@ export class MainComponent implements OnInit {
 
     let text = Form.value.text;    
 
+    this.GeneralErrors = [];
+
     this.tokenList = this.analyzer.scanText(text);
 
     let flag = false;
@@ -55,28 +61,79 @@ export class MainComponent implements OnInit {
         flag = true;
         break;
       }
-    }
-
-    for(let token of this.tokenList){
-      if(token.type === "HTML_STRING"){
-        // Analize HTML text
-      }
-    }
+    }    
 
     this.sintacticErrors = this.parser.Start(this.tokenList);
 
-    if(this.sintacticErrors.length > 0){
-      actualTab.pythonText = "Errores sintacticos. No se puede generar traduccion\n\n";
-      for(let i = 0; i < this.sintacticErrors.length; i++){
-        actualTab.pythonText += "\t\t" + this.sintacticErrors[i] + "\n";
+    if(flag){
+      let x=1;
+      // Lexical errors
+      for(let error of this.tokenList){
+        if(error.type === "UNKNOWN"){
+          this.GeneralErrors.push(new Errors("Lexico", x, "Caracter no aceptado " + error.lexeme, error.row, error.column));
+          x++;
+        }
       }
+
+      if(this.sintacticErrors.length > 0){
+        // Sintactical Errors
+        for(let error of this.sintacticErrors){
+          error.id = x;
+          this.GeneralErrors.push(error);
+          x++;
+        }
+      }
+
+      this.bErrors = true;
     }
     else{
+      if(this.sintacticErrors.length > 0){
+        let x=1;
+        // Sintactical Errors
+        for(let error of this.sintacticErrors){
+          error.id = x;
+          this.GeneralErrors.push(error);
+          x++;
+        }
+        this.bErrors = true;
+      }
+    }        
+
+    if(!flag && this.sintacticErrors.length === 0){
       actualTab.pythonText = this.parser.traductor.text;
-    }    
+
+      // HTML ANALIZE
+      for(let html of this.parser.htmlList){
+        this.htmlTAGs = this.analyzer.scanHTML(html);
+
+        let flagHTML = false;
+        for(let tag of this.htmlTAGs){
+          if(tag.type === "BAD_TAG"){            
+            flagHTML = true;
+            break;
+          }
+        }
+
+        if(flagHTML){
+          actualTab.htmlText = "EXISTEN ERRORES EN EL HTML";
+          actualTab.jsonText = "NO SE PUEDE REALIZAR LA CONVERSION A JSON";
+          break;
+        }
+        else{
+          this.parser.StartHTML(this.htmlTAGs);
+          actualTab.jsonText += "\n" + 
+          this.parser.jsonText;
+          
+          actualTab.htmlText += "\n" + this.parser.htmlText;
+        }
+
+      }      
+
+    }
 
   }
 
+  
 
 
 
@@ -170,5 +227,11 @@ export class MainComponent implements OnInit {
     downloadLink.click();
     
     this.save = false;
+  }
+
+  /* --------------- Return to editor --------------- */
+  checkErrors(){
+    this.bErrors = false;
+    this.GeneralErrors = [];
   }
 }

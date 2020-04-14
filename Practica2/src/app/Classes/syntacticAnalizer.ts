@@ -1,22 +1,29 @@
 import { Token } from './Token';
 import { ToPython } from './ToPython';
+import { Errors } from './Errors';
 
 export class SyntacticAnalyzer{
 
+    // List of tokens, errors and htmlTexts
     tokenList: Array<Token> = new Array<Token>();
-    errorsList: Array<string> = new Array<string>();
+    errorsList: Array<Errors> = new Array<Errors>();
+    htmlList: Array<string> = new Array<string>();
 
+    // "Flags" for loops and switch
     switchList: Array<number> = new Array<number>();
     loopList: Array<number> = new Array<number>();
 
+    // Variables used for the sintactic analize
     index: number = 0;
     tabs: number = 0;
     preanalisis: Token;
     sintacticError: boolean = false;
     errorF: boolean = false;
+    
     // Flags
     flagFunction: boolean = false;
     flagMethod: boolean = false;
+    htmlFlag: boolean = false;
 
     traductor: ToPython;
 
@@ -61,7 +68,7 @@ export class SyntacticAnalyzer{
                 // Sintactic Error
                 console.log("Error sintactico");
                 console.log("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "] en linea " + this.preanalisis.row);
-                this.errorsList.push("Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "] en linea " + this.preanalisis.row);
+                this.errorsList.push(new Errors("Sintactico", 0, "Se esperaba [" + _tokenType + "] en lugar de: [" + this.preanalisis.type + "]", this.preanalisis.row, this.preanalisis.column));
                 this.sintacticError = true;
                 this.errorF = true;
             }            
@@ -79,33 +86,39 @@ export class SyntacticAnalyzer{
         }
     }
 
-    Start(_tokenList: Array<Token>): Array<string>{
+    Start(_tokenList: Array<Token>): Array<Errors>{
 
         this.traductor = new ToPython();
         this.index = 0;
         this.errorsList = [];
         this.tokenList = _tokenList;
 
+        this.htmlList = [];
+
         this.loopList = [];
         this.switchList = [];
 
         this.tokenList.push(new Token("LAST", "LAST", "GG", "GG"));
 
-        this.preanalisis = this.tokenList[this.index];
+        if(this.tokenList.length > 5){
+            this.preanalisis = this.tokenList[this.index];
 
-        this.PassComments();
+            this.PassComments();
 
-        this.tabs = 0;
+            this.tabs = 0;
 
-        this.Parea("WR_CLASS");
-        this.Parea("ID");
-        this.Parea("S_OPEN_KEY");
+            this.Parea("WR_CLASS");
+            this.Parea("ID");
+            this.Parea("S_OPEN_KEY");
+            
+            this.InsideClass();
+
+            this.Parea("S_CLOSE_KEY");
+
+            this.Parea("LAST");
+        }
+
         
-        this.InsideClass();
-
-        this.Parea("S_CLOSE_KEY");
-
-        this.Parea("LAST");
 
         return this.errorsList;
     }
@@ -113,7 +126,7 @@ export class SyntacticAnalyzer{
     nameF:string;
     InsideClass(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
-        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL" || this.preanalisis.type === "S_NOT"){
+        this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
             this.Type();
             this.idsDeclaration = [];
             this.idsDeclaration.push(this.preanalisis.lexeme);
@@ -470,6 +483,14 @@ export class SyntacticAnalyzer{
         if(this.preanalisis.type === "INTEGER" || this.preanalisis.type === "DECIMAL" || this.preanalisis.type === "STRING" || this.preanalisis.type === "HTML_STRING" || this.preanalisis.type === "NORMAL_STRING" ||
         this.preanalisis.type === "ID" || this.preanalisis.type === "WR_TRUE" || this.preanalisis.type === "WR_FALSE" || this.preanalisis.type === "S_OPEN_PARENTHESIS" || this.preanalisis.type === "S_NOT"){
             this.Expression();
+            if(this.htmlFlag){
+                for(let char of this.impressionList){
+                    if(char.includes("'")){
+                        this.htmlList.push(char);
+                    }
+                }
+                this.htmlFlag = false;
+            }
             this.traductor.TraducePrint(this.impressionList, this.tabs);
         }
         else{
@@ -884,6 +905,10 @@ export class SyntacticAnalyzer{
         else if(this.preanalisis.type === "NORMAL_STRING" || this.preanalisis.type === "HTML_STRING"){
             this.addThings();
             
+            if(this.preanalisis.type === "HTML_STRING"){
+                this.htmlFlag = true;
+            }
+
             this.preanalisis.type = "STRING";
             this.Parea("STRING")
         }
@@ -933,4 +958,232 @@ export class SyntacticAnalyzer{
         this.impressionList.push(this.preanalisis.lexeme);
         this.ifElseCondition += this.preanalisis.lexeme;        
     }
+
+    /* -------------------- HTML TO JSON -------------------- */
+    PareaHTML(_tokenType: string){
+        this.htmlText += this.addTabs(this.htmlTabs) + this.htmlActualTag.lexeme + "\n";
+        this.htmlIndex++;
+        this.htmlActualTag = this.htmlTAGs[this.htmlIndex];
+    }
+
+    htmlTAGs: Array<Token>;
+    htmlIndex = 0;
+    htmlActualTag: Token;
+    htmlText: string = "";
+    jsonText: string = "";
+    htmlTabs: number = 0;
+    StartHTML(_tagList: Array<Token>){
+
+        this.jsonText = "";
+        this.htmlText = "";
+
+        this.htmlTAGs = _tagList;
+        this.htmlIndex = 0;
+        this.htmlTabs = 0;        
+
+        this.htmlActualTag = this.htmlTAGs[this.htmlIndex];
+
+        if(this.htmlTAGs.length >= 8){            
+            this.PareaHTML("HTML_TAG");
+            this.jsonText += "\"HTML\":{\n";
+            this.htmlTabs++;
+            this.PareaHTML("HEAD_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"HEAD\":{\n";
+            this.htmlTabs++;
+            this.PareaHTML("TITLE_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"TITLE\":{\n";
+            this.htmlTabs++;
+
+            this.TitleSentence();
+            
+            this.PareaHTML("TITLE_TAG_CLOSE");
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n"
+            this.htmlTabs--;
+            this.PareaHTML("HEAD_TAG_CLOSE");
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n"
+
+            let style = "";
+            if(this.htmlActualTag.lexeme.includes("style")){            
+                let flagS = false;
+                let count = 0;
+                for(let char of this.htmlActualTag.lexeme){
+                    if(flagS){
+                        if(style.length > 0 && char === "\""){
+                            flagS = false;
+                        }
+                        style += char;
+                    }
+                    switch(char){
+                        case "l":
+                            count++;
+                            break;
+                        case "e":
+                            count++;
+                            break;
+                        case "=":
+                            count++;
+                            break;
+                    }
+                    if(!flagS && count === 3){
+                        flagS = true;
+                    }                    
+                }
+            }
+            this.PareaHTML("BODY_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"BODY\":{\n";
+            if(style.length > 0){
+                this.jsonText += this.addTabs(this.htmlTabs + 1) + "\"STYLE\": " + style + ", \n";
+            }        
+
+            this.BodySentence();
+            this.htmlTabs--;
+
+            this.PareaHTML("BODY_TAG_CLOSE")
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";        
+            this.htmlTabs--;
+
+            this.PareaHTML("HTML_TAG_CLOSE");
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";        
+            this.htmlTabs--;
+        }        
+
+    }
+
+    TitleSentence(){
+        if(this.htmlActualTag.type === "HTML_TEXT"){
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"TEXTO\": "+ this.htmlActualTag.lexeme +"\n";
+            this.PareaHTML("HTML_TEXT");  
+            this.htmlTabs--;          
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    BodySentence(){
+        this.htmlTabs++;
+        if(this.htmlActualTag.type === "DIV_TAG"){
+            let style = "";
+            if(this.htmlActualTag.lexeme.includes("style")){            
+                let flagS = false;
+                let count = 0;
+                for(let char of this.htmlActualTag.lexeme){
+                    switch(char){
+                        case "l":
+                            count++;
+                            break;
+                        case "e":
+                            count++;
+                            break;
+                        case "=":
+                            count++;
+                            break;
+                    }
+                    if(!flagS && count === 4){
+                        flagS = true;
+                    }
+                    if(flagS){
+                        if(style.length > 0 && char === "\""){
+                            flagS = false;
+                        }
+                        style += char;
+                    }
+                }
+            }
+            this.PareaHTML("DIV_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"DIV\":{\n";
+            if(style.length > 0){
+                this.jsonText += this.addTabs(this.htmlTabs) + "\"STYLE\": " + style + ", \n";
+            }            
+            this.BodySentence();
+            this.htmlTabs--;
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";
+            this.PareaHTML("DIV_TAG_CLOSE");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "BR_TAG"){
+            this.PareaHTML("BR_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"BR\",\n"
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "P_TAG"){
+            this.PareaHTML("P_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"P\":{\n";
+            this.BodySentence();
+            this.htmlTabs--;
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";
+            this.PareaHTML("P_TAG_CLOSE");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "H_TAG"){            
+            this.PareaHTML("H_TAG");
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"H\":{\n";
+            this.BodySentence();
+            this.htmlTabs--;
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";
+            this.PareaHTML("H_TAG_CLOSE");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "BUTTON_TAG"){
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"BUTTON\":{\n";
+            this.PareaHTML("BUTTON_TAG");
+            this.BodySentence();
+            this.htmlTabs--;
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";
+            this.PareaHTML("BUTTON_TAG_CLOSE");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "LABEL_TAG"){
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"LABEL\":{\n";
+            this.PareaHTML("LABEL_TAG");
+            this.BodySentence();
+            this.htmlTabs--;
+            this.jsonText += this.addTabs(this.htmlTabs) + "}\n";
+            this.PareaHTML("LABEL_TAG_CLOSE");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "INPUT_TAG"){
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"INPUT\",\n";
+            this.PareaHTML("INPUT_TAG");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else if(this.htmlActualTag.type === "HTML_TEXT"){
+            this.jsonText += this.addTabs(this.htmlTabs) + "\"TEXTO\": "+ this.htmlActualTag.lexeme +",\n";
+            this.PareaHTML("HTML_TEXT");
+            this.htmlTabs--;
+            this.BodySentence();
+        }
+        else{
+            // Epsilon
+        }
+    }
+
+    addTabs(_tabs: number): string{
+        let text = "";
+        for(let i=0; i < _tabs; i++){
+            text += "     ";
+        }
+        return text;
+    }
+    /*
+BodySentences := 
+
+    | DIV_TAG <BodySentences> DIV_TAG_CLOSE
+    | BR_TAG <BodySentences> 
+    | P_TAG <BodySentences> P_TAG_CLOSE
+    | H_TAG <BodySentences> H_TAG_CLOSE
+    | BUTTON_TAG <BodySentences> BUTTON_TAG_CLOSE
+    | LABEL_TAG <BodySentences> LABEL_TAG_CLOSE
+    | INPUT_TAG <BodySentences>
+    | HTML_TEXT <BodySentences>
+    | ε
+    
+    */
 }

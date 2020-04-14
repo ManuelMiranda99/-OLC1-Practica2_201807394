@@ -70,10 +70,20 @@ export class Token{
         UNKNOWN: 'Desconocido',
         LAST: 'Ultimo',
 
-        BegginingOfTAG
-        ContentOfTag
-        EndOfTag
-        WR_STYLE
+        HTML TOKENS:
+            TAG
+            htmlTAG
+            headTag
+            bodyTag
+            titleTag
+            divTag
+            brTag
+            pTag
+            h1Tag
+            buttonTag
+            labelTag
+            inputTag
+            TEXT
     };*/
 
     type: string;
@@ -81,7 +91,7 @@ export class Token{
     row: string;
     column: string;
 
-    constructor(_type: string, _lexeme: string, _row: string, _column: string){
+    constructor(_type: string, _lexeme: string, _row: string, _column: string){        
         if(_type == "ID"){
             switch(_lexeme){
                 case "class":
@@ -161,7 +171,7 @@ export class Token{
             }
         }else{
             this.type = _type;
-        }
+        }        
         this.lexeme = _lexeme;
         this.row = _row;
         this.column = _column;
