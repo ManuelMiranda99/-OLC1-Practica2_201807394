@@ -1,13 +1,16 @@
 import { Token } from './Token';
 import { ToPython } from './ToPython';
 import { Errors } from './Errors';
+import { Dictionary } from './Dictionary';
+import { Symbol } from './Symbol';
 
 export class SyntacticAnalyzer{
 
-    // List of tokens, errors and htmlTexts
+    // List of tokens, errors, htmlTexts and Symbols
     tokenList: Array<Token> = new Array<Token>();
     errorsList: Array<Errors> = new Array<Errors>();
     htmlList: Array<string> = new Array<string>();
+    dictionary: Dictionary;
 
     // "Flags" for loops and switch
     switchList: Array<number> = new Array<number>();
@@ -94,6 +97,7 @@ export class SyntacticAnalyzer{
         this.tokenList = _tokenList;
 
         this.htmlList = [];
+        this.dictionary = new Dictionary("");
 
         this.loopList = [];
         this.switchList = [];
@@ -123,10 +127,12 @@ export class SyntacticAnalyzer{
         return this.errorsList;
     }
     
+    type: string;
     nameF:string;
     InsideClass(){
         if(this.preanalisis.type === "WR_INT" || this.preanalisis.type === "WR_DOUBLE"|| this.preanalisis.type === "WR_CHAR" ||
         this.preanalisis.type === "WR_STRING" || this.preanalisis.type === "WR_BOOL"){
+            this.type = this.preanalisis.lexeme;            
             this.Type();
             this.idsDeclaration = [];
             this.idsDeclaration.push(this.preanalisis.lexeme);
@@ -174,6 +180,7 @@ export class SyntacticAnalyzer{
 
             for(let variable of this.idsDeclaration){
                 this.traductor.TraduceDecOrAssigOfVariable(variable, this.declarationValue, this.tabs);
+                this.dictionary.InsertNewSymbol(new Symbol(variable, this.type, this.declarationValue, this.preanalisis.row, this.preanalisis.column));
             }
 
             this.Parea("S_SEMICOLON");            
@@ -395,6 +402,7 @@ export class SyntacticAnalyzer{
         this.declarationValue = "";
         this.idsDeclaration = [];
 
+        this.type = this.preanalisis.lexeme;
         this.Type();
         this.VariablesDeclaration();
     }
@@ -407,6 +415,8 @@ export class SyntacticAnalyzer{
 
         for(let variable of this.idsDeclaration){
             this.traductor.TraduceDecOrAssigOfVariable(variable, this.declarationValue, this.tabs);
+            this.dictionary.InsertNewSymbol(new Symbol(variable, this.type, this.declarationValue, this.preanalisis.row, this.preanalisis.column));
+
         }
 
         this.Parea("S_SEMICOLON");
@@ -453,6 +463,7 @@ export class SyntacticAnalyzer{
             this.Parea("S_EQUALS");
             this.Expression();
             this.traductor.TraduceDecOrAssigOfVariable(this.idsDeclaration[0], this.declarationValue, this.tabs);
+            this.dictionary.InsertNewSymbol(new Symbol(this.idsDeclaration[0], this.type, this.declarationValue, this.preanalisis.row, this.preanalisis.column));
         }
         else if(this.preanalisis.type === "S_OPEN_PARENTHESIS"){
             this.callF += this.preanalisis.lexeme;

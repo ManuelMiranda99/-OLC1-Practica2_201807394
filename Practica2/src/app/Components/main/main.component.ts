@@ -92,6 +92,8 @@ export class MainComponent implements OnInit {
     if(!flag && this.sintacticErrors.length === 0){
       actualTab.pythonText = this.parser.traductor.text;
 
+      actualTab.dictionary = this.parser.dictionary;
+
       // HTML ANALIZE
       for(let html of this.parser.htmlList){
         this.htmlTAGs = this.analyzer.scanHTML(html);

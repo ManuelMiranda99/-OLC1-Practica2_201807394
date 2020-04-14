@@ -9,13 +9,8 @@ export class Dictionary{
         this.name = _name;
     }
 
-    InsertNewSymbol(_symbol: Symbol){
-        if(this.CheckSymbol(_symbol.name)){
-            this.ChangeValueOfSymbol(_symbol.name, _symbol.value, _symbol.row, _symbol.column);
-        }
-        else{
-            this.Symbols.push(_symbol);
-        }
+    InsertNewSymbol(_symbol: Symbol){        
+        this.Symbols.push(_symbol);
     }
 
     ChangeValueOfSymbol(_id: string, _newValue: string, _row: string, _column: string){
@@ -24,7 +19,7 @@ export class Dictionary{
         }
         else{
             // Symbol doesnt exist
-            this.Symbols.push(new Symbol(_id, "var", _newValue, _row, _column);
+            this.Symbols.push(new Symbol(_id, "var", _newValue, _row, _column));
         }
     }
 

@@ -125,8 +125,21 @@
                         </div>
         
                         <div class="card-body">
-                            <table>
-                                
+                            <table class="table" style="background: white;">
+                                <thead class="thead-dark" style="background: black;color: white;font-weight: bold;">
+                                    <tr>
+                                        <td>Nombre</td>
+                                        <td>Tipo</td>
+                                        <td>Linea</td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let symbol of actualTab.dictionary.Symbols">
+                                        <td>{{symbol.name}}</td>
+                                        <td>{{symbol.type}}</td>
+                                        <td>{{symbol.row}}</td>
+                                    </tr>
+                                </tbody>                                                                
                             </table>
                         </div>
                     </div>
