@@ -24,7 +24,8 @@ export class MainComponent implements OnInit {
   showF = false;
   save = false;
   bErrors = false;
-  fileNameSave = "DocumentoCS.cs";
+  alert = false;
+  fileNameSave = "DocumentoCS";
   actualTab: Tab = new Tab("", "", "");
   public static countOfTabs = 0;
 
@@ -35,17 +36,6 @@ export class MainComponent implements OnInit {
   ngOnInit(): void {
     document.getElementById('mi-file').addEventListener('change', this.openFile, false);
   }
-
-
-
-
-
-
-
-
-
-
-
 
   analizeText(Form: NgForm, actualTab: Tab){
 
@@ -133,22 +123,10 @@ export class MainComponent implements OnInit {
 
   }
 
-  
-
-
-
-
-
-
-
-
-
-
-  
   // Adding tabs to the screen
   addTab(){
     this.tabs.push(new Tab("TabNo" + MainComponent.countOfTabs, "Nuevo" + MainComponent.countOfTabs, ""));
-    this.fileNameSave = "Nuevo" + MainComponent.countOfTabs + ".cs";
+    this.fileNameSave = "Nuevo" + MainComponent.countOfTabs;
     MainComponent.countOfTabs++;
   }
   
@@ -210,7 +188,9 @@ export class MainComponent implements OnInit {
 
     let downloadLink = document.createElement("a");
 
-    downloadLink.download = this.fileNameSave;
+    this.fileNameSave = this.fileNameSave.replace(".cs", "");
+
+    downloadLink.download = this.fileNameSave + ".cs";
 
     this.actualTab.name = this.fileNameSave;
 
@@ -229,9 +209,69 @@ export class MainComponent implements OnInit {
     this.save = false;
   }
 
+  /* --------------- Generate Reports --------------- */
+  GenerateHTMLReport(){
+    if(this.actualTab.htmlText.length > 0){
+      let textFileBlob = new Blob([this.actualTab.htmlText], {type: 'text/plain'});    
+
+      let downloadLink = document.createElement("a");
+
+      this.fileNameSave = this.fileNameSave.replace(".cs", "");
+
+      downloadLink.download = this.fileNameSave + ".html";
+
+      this.actualTab.name = this.fileNameSave;
+
+      downloadLink.innerHTML = "GG?";
+
+      window.URL = window.URL || window.webkitURL;
+
+      downloadLink.href = window.URL.createObjectURL(textFileBlob);
+
+      downloadLink.style.display = "none";
+
+      document.body.appendChild(downloadLink);
+
+      downloadLink.click();
+    }
+    else{
+      this.alert = true;
+    }
+  }
+
+  GeneratePythonReport(){
+    if(this.actualTab.pythonText.length > 0){
+      let textFileBlob = new Blob([this.actualTab.pythonText], {type: 'text/plain'});    
+
+      let downloadLink = document.createElement("a");
+
+      this.fileNameSave = this.fileNameSave.replace(".cs", "");
+
+      downloadLink.download = this.fileNameSave + ".py";
+
+      this.actualTab.name = this.fileNameSave;
+
+      downloadLink.innerHTML = "GG?";
+
+      window.URL = window.URL || window.webkitURL;
+
+      downloadLink.href = window.URL.createObjectURL(textFileBlob);
+
+      downloadLink.style.display = "none";
+
+      document.body.appendChild(downloadLink);
+
+      downloadLink.click();
+    }        
+    else{
+      this.alert = true;
+    }
+  }
+
   /* --------------- Return to editor --------------- */
   checkErrors(){
     this.bErrors = false;
     this.GeneralErrors = [];
+    this.alert = false;
   }
 }
