@@ -594,12 +594,28 @@ export class SyntacticAnalyzer{
     SwitchSentence(){
         this.Parea("WR_SWITCH");
         this.Parea("S_OPEN_PARENTHESIS");
+
+        this.declarationValue = "";
+
         this.Expression();
+
+        this.traductor.TraduceBegginingSwitch(this.tabs, this.declarationValue);
+        
         this.Parea("S_CLOSE_PARENTHESIS");
-        this.Parea("S_OPEN_KEY");
+        this.Parea("S_OPEN_KEY");        
+
+        this.tabs++;
+        this.tabs++;
 
         this.CaseList();
         this.OptDefault();
+
+        this.tabs--;
+
+        this.traductor.TraduceEndSwitch(this.tabs);
+
+        this.tabs--;
+        
 
         this.Parea("S_CLOSE_KEY");
     }
@@ -607,9 +623,15 @@ export class SyntacticAnalyzer{
     CaseList(){
         if(this.preanalisis.type === "WR_CASE"){
             this.Parea("WR_CASE");
-            this.Expression();
-            this.Parea("S_TWO_POINTS");
 
+            this.declarationValue = "";
+
+            this.Expression();
+
+            this.traductor.TraduceCase(this.declarationValue, this.tabs)
+
+            this.Parea("S_TWO_POINTS");
+            
             this.switchList.push(1);
 
             this.SentencesList();
@@ -619,6 +641,8 @@ export class SyntacticAnalyzer{
             this.SentencesListSwitch();
 
             this.switchList.pop();
+
+            this.traductor.TraduceEndCase(this.tabs);
 
             this.tabs--;
 
@@ -634,6 +658,8 @@ export class SyntacticAnalyzer{
             this.Parea("WR_DEFAULT");
             this.Parea("S_TWO_POINTS");
 
+            this.traductor.TraduceDefault(this.tabs);
+
             this.switchList.push(1);
             
             this.SentencesList();
@@ -644,6 +670,8 @@ export class SyntacticAnalyzer{
 
             this.switchList.pop();
 
+            this.traductor.TraduceEndCase(this.tabs);
+
             this.tabs--;
 
         }
@@ -652,17 +680,52 @@ export class SyntacticAnalyzer{
         }
     }
 
+    idFor: string;
     ForSentence(){
         this.Parea("WR_FOR");
         this.Parea("S_OPEN_PARENTHESIS");
+
+        this.idFor = "";
+
         this.OptType();
+
+        this.declarationValue = "";
+
         this.AssignmentFor();
+                
+        let beginWith = this.declarationValue;
+
+        this.declarationValue = "";
+
         this.Expression();
-        this.Parea("S_SEMICOLON");
+        
+        let flag = false;
+        let endWith = "";
+        for(let char of this.declarationValue){
+            if(flag && char != "="){
+                endWith += char;
+            }
+            if(char === ">" || char === "<" || char === "="){
+                flag = true;
+            }
+        }        
+
+        this.Parea("S_SEMICOLON");                
+
+        this.declarationValue = "";
+
         this.Expression();
+        
         this.OptIncDec();
         this.Parea("S_CLOSE_PARENTHESIS");
         this.Parea("S_OPEN_KEY");
+
+        if(this.declarationValue.includes("--")){
+            this.traductor.TraduceFor(this.idFor, endWith, beginWith, this.tabs);
+        }
+        else{
+            this.traductor.TraduceFor(this.idFor, beginWith, endWith, this.tabs);
+        }
 
         this.loopList.push(1);
 
@@ -690,6 +753,7 @@ export class SyntacticAnalyzer{
     }
 
     AssignmentFor(){
+        this.idFor = this.preanalisis.lexeme;
         this.Parea("ID");
         this.Parea("S_EQUALS");
         this.Expression();
@@ -698,9 +762,11 @@ export class SyntacticAnalyzer{
 
     OptIncDec(){
         if(this.preanalisis.type === "S_INCREMENT"){
+            this.declarationValue += this.preanalisis.lexeme;
             this.Parea("S_INCREMENT");
         }
         else if(this.preanalisis.type === "S_DECREMENT"){
+            this.declarationValue += this.preanalisis.lexeme;
             this.Parea("S_DECREMENT");
         }
         else{

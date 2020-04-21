@@ -43,16 +43,21 @@ export class ToPython{
         this.text += this.InsertTabs(_tabs) + _condition + " :\n";
     }
 
-    TraduceBegginingSwitch(_tabs: number){
-        this.text += this.InsertTabs(_tabs) + "def switch(case):\n" + 
+    TraduceBegginingSwitch(_tabs: number, _expression: string){
+        this.text += this.InsertTabs(_tabs) + "def switch(case," + _expression + "):\n" + 
                      this.InsertTabs(_tabs + 1) + "switcher = {\n";
     }
 
     TraduceCase(_expression: string, _tabs: number){
         this.text += this.InsertTabs(_tabs) + _expression + ":\n"
     }
+
     TraduceEndCase(_tabs: number){
         this.text += this.InsertTabs(_tabs) + ",\n";
+    }
+
+    TraduceDefault(_tabs: number){
+        this.text += this.InsertTabs(_tabs) + "default:\n"
     }
 
     TraduceEndSwitch(_tabs: number){
@@ -72,8 +77,8 @@ export class ToPython{
         this.text += "\n"+ this.InsertTabs(_tabs) + "def " + _name + "(" + _params + "):\n";
     }
 
-    TraduceFor(){
-
+    TraduceFor(_id: string, _beginWith: string, _endWith: string, _tabs: number){
+        this.text += this.InsertTabs(_tabs) + "for " + _id + " in range(" + _beginWith + ", " + _endWith + "):\n"
     }
 
     TraduceWhile(_condition: string,_tabs: number){

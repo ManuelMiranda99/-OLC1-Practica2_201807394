@@ -39,6 +39,10 @@ export class MainComponent implements OnInit {
 
   analizeText(Form: NgForm, actualTab: Tab){
 
+    actualTab.htmlText = "";
+    actualTab.jsonText = "";
+    actualTab.pythonText = "";
+
     let text = Form.value.text;    
 
     this.GeneralErrors = [];
